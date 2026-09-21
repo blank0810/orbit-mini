@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Orbit Mini",
+      "Group": "Servers",
+      "Host": "db",
+      "Port": 5432,
+      "MaintenanceDB": "orbit",
+      "Username": "orbit",
+      "SSLMode": "prefer",
+      "Comment": "Local development database for Orbit Mini."
+    }
+  }
+}

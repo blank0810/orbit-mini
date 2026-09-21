@@ -1,0 +1,60 @@
+services:
+  db:
+    image: postgres:16-alpine
+    # env_file injects POSTGRES_* straight into the container. Compose-level ${VAR}
+    # interpolation is deliberately avoided: it resolves against a .env in the project
+    # directory (infra/), not the repo root, and silently yields empty strings.
+    env_file: ../.env
+    ports: ["127.0.0.1:7303:5432"]
+    volumes:
+      - orbit_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ../api
+      dockerfile: Dockerfile
+    # DATABASE_URL is a complete string in .env, not assembled here, for the same reason.
+    env_file: ../.env
+    ports: ["127.0.0.1:7302:8000"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+    env_file: ../.env
+    ports: ["127.0.0.1:7301:3000"]
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Development tool only, bound to loopback; not part of the brief.
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    env_file: ../.env
+    environment:
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports: ["127.0.0.1:7304:80"]
+    volumes:
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+      - orbit_pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  orbit_db_data:
+  orbit_pgadmin_data:

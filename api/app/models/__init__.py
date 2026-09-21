@@ -1,0 +1,1 @@
+"""Models: table declarations only."""

@@ -1,31 +1,60 @@
 # Orbit Mini
 
-A working slice of a client subscription dashboard.
+Orbit Mini is a working slice of a client subscription dashboard, currently at the
+scaffold stage. The intended flow is that a person signs up for a monthly plan
+through Stripe test mode, the system records the payment, and one page shows that
+person their plan and status. FastAPI owns all state; Next.js is presentation only.
+The subscription flow is not built yet.
 
-Someone signs up to a monthly plan through Stripe (test mode), the system records the
-payment, and one page shows that person their plan and status, laid out for a phone.
+## Prerequisites
 
-| Layer | Technology |
-|---|---|
-| API and system of record | FastAPI, SQLAlchemy 2.0, Python 3.11+ |
-| Database | PostgreSQL 16, one table |
-| Payments | Stripe Checkout (test mode), webhook-driven |
-| Dashboard | Next.js 16, React 19, TypeScript, Tailwind 4 |
-| Mobile | Flutter component |
-| Media | FFmpeg plus Runpod API |
-| Delivery | Docker, docker compose, Cloudflare Tunnel |
-
-## Status
-
-Scaffolded. See [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) for the build
-sequence and [`AGENTS.md`](AGENTS.md) for the engineering contract.
-
-## Running it
+Docker with Docker Compose support. From the repository root, create your local
+configuration:
 
 ```bash
-cp .env.example .env    # fill in Stripe test keys
+cp .env.example .env
+```
+
+Set `POSTGRES_PASSWORD` and `PGADMIN_DEFAULT_PASSWORD` in `.env` before starting.
+Keep `.env` local; it is gitignored.
+
+## Run
+
+From the repository root:
+
+```bash
 docker compose -f infra/docker-compose.yml up --build
 ```
 
-Detailed setup, the public URL, the decisions and their tradeoffs, and the list of what is
-deliberately not built, all land here before delivery.
+## URLs
+
+| Service | URL |
+| --- | --- |
+| Web | http://localhost:7301 |
+| API | http://localhost:7302 |
+| Liveness (no database check) | http://localhost:7302/api/health |
+| Readiness (database `SELECT 1`) | http://localhost:7302/api/health/ready |
+| pgAdmin (development tool) | http://localhost:7304 |
+
+## Development tools
+
+pgAdmin is a development convenience for inspecting the database, bound to
+`127.0.0.1`, and is not required to run the application.
+
+## Ports
+
+Host ports **7301** (web), **7302** (API), and **7303** (PostgreSQL) avoid
+collisions with other projects using 3000, 8000, and 5432 on this machine.
+They map to container ports 3000, 8000, and 5432 respectively. Every published
+port binds explicitly to loopback (`127.0.0.1`), so access is local to this machine.
+
+## Not built yet
+
+- Subscriber model and its migration
+- Accounts and login
+- Stripe Checkout and the payment webhook
+- Dashboard UI
+- Test suite
+- Cloudflare Tunnel
+- Flutter status-card widget
+- FFmpeg/Runpod media pipeline
