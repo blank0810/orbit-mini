@@ -341,6 +341,22 @@ below: nobody needs a password reset for an account whose password is printed on
 - The demo is the fast path, not the proof. The video still shows a real registration, a real
   test checkout, and the status flipping on a real webhook.
 
+### Known security gap, accepted and reported
+
+**Registration is an account-enumeration oracle.** `POST /api/auth/register` answers 409 for
+an address that already exists, so anyone can probe which emails have accounts.
+
+Login is not: it returns an identical 401 for an unknown address and a wrong password, and
+still runs a hash verification when the account is absent so response time does not leak it
+either. The asymmetry is deliberate, not an oversight in one place.
+
+Closing it properly needs the flow that was cut: always answer 201 and send mail that either
+welcomes you or tells you an account already exists. With no mail system, suppressing the 409
+would tell a real person their signup succeeded when it did not — a worse failure than the
+disclosure. Rate limiting, the other mitigation, is also out of scope.
+
+This goes in the end-of-day report as a named gap. `AGENTS.md` section 12.
+
 ### Still not built
 
 - **Password reset, email verification, OAuth, "remember me", rate limiting on login.**

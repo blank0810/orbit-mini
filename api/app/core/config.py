@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -7,8 +8,15 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     database_url: str
     cors_origins: str = ""
-    environment: str = "development"
-    jwt_secret: str = "dev-only-insecure-change-me"
+    # Defaults to production. A missing ENVIRONMENT must yield the STRICTER behaviour:
+    # forgetting to set it in a deployment cannot silently disable the Secure cookie flag.
+    # Development opts in explicitly.
+    environment: str = "production"
+    # No default, and a length floor. A committed fallback secret would let anyone who
+    # reads this repository forge a session cookie for any subscriber id, and this service
+    # is published to the internet through a tunnel. Missing or weak fails startup loudly.
+    # Generate with: openssl rand -hex 32
+    jwt_secret: str = Field(min_length=32)
     jwt_expire_minutes: int = 60 * 24 * 7  # 7 days; there is no refresh flow.
     plan_name: str = "ScaleSage Starter"
     cookie_name: str = "orbit_session"

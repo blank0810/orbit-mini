@@ -33,6 +33,14 @@ def register(data: RegisterRequest, response: Response, session: DbSession) -> S
     try:
         subscriber = auth_service.register_subscriber(session, data)
     except auth_service.EmailAlreadyRegistered:
+        # KNOWN, ACCEPTED: this confirms an address has an account, so registration is an
+        # enumeration oracle. Login is not - it returns an identical 401 and runs a hash
+        # verification for absent accounts so timing does not leak either.
+        # Closing it here needs the flow we deliberately cut: always answer 201 and send
+        # mail that either welcomes you or says you already have an account. With no mail
+        # system, hiding it would instead tell a real user their signup worked when it did
+        # not. Rate limiting, the other mitigation, is also out of scope.
+        # Reported as a gap rather than silently traded away. AGENTS.md section 12.
         raise HTTPException(status_code=409, detail="That email is already registered") from None
     session.commit()
     _set_session_cookie(response, subscriber.id)
