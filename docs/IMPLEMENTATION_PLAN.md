@@ -295,6 +295,27 @@ gets attempted.
 
 Explicitly **not** building, and saying so in the report if asked:
 
+### The demo account
+
+A seeded, already-`active` account whose credentials are shown on the login page.
+
+**Why.** Without it the reviewer must register, then complete a Stripe test checkout, before
+seeing a single dashboard. One button instead removes that entirely. It also covers the gap
+below: nobody needs a password reset for an account whose password is printed on the page.
+
+- `demo@orbit.ehnand.com`, "Demo Account", status `active`, `stripe_subscription_id`
+  `sub_demo_seeded`. Unmistakably seeded, never mistakable for a real webhook result.
+- Created by `docker compose exec api python -m app.seed_demo`, documented in `README.md`.
+  Not an `ENVIRONMENT`-conditional branch on boot: that is a config knob, and every knob is a
+  decision someone makes later under pressure.
+- The login page gets ONE "Use demo account" button that fills both fields, with the
+  credentials in plain text beneath it as information. Not a button *and* a copy affordance
+  competing for the same job.
+- The demo is the fast path, not the proof. The video still shows a real registration, a real
+  test checkout, and the status flipping on a real webhook.
+
+### Still not built
+
 - **Password reset, email verification, OAuth, "remember me", rate limiting on login.**
   Accounts are in (see `AGENTS.md` section 11); the rest of an auth system is not. Named in
   the report as the known gap, because a login without a reset flow is incomplete and
