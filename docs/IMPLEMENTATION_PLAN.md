@@ -90,8 +90,10 @@ One table, `subscriber`:
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid, pk | |
-| `email` | text, unique, not null | the identity for the dashboard lookup |
-| `name` | text, nullable | |
+| `email` | text, unique, not null | the login identity |
+| `first_name` | text, not null | |
+| `last_name` | text, not null | |
+| `password_hash` | text, not null | argon2. Never logged, never returned in any response. |
 | `stripe_customer_id` | text, nullable, indexed | set on checkout creation |
 | `stripe_subscription_id` | text, nullable, indexed | set on webhook |
 | `plan_name` | text, not null | denormalised for display, avoids a Stripe call per page load |
@@ -111,12 +113,24 @@ Deliberately small. Four endpoints plus health.
 
 | Method | Path | Does |
 |---|---|---|
-| `GET` | `/api/health` | liveness, used by compose and the tunnel check |
-| `POST` | `/api/signup` | upsert subscriber as `incomplete`, create a Stripe Checkout session, return its URL |
-| `POST` | `/api/webhooks/stripe` | verify signature, apply the event idempotently, return 2xx fast |
-| `GET` | `/api/subscribers/{email}` | the dashboard payload: plan, status, period end |
+| `GET` | `/api/health` | liveness. Touches no database. |
+| `GET` | `/api/health/ready` | readiness, `SELECT 1`. What the compose healthcheck polls. |
+| `POST` | `/api/auth/register` | create the account: first name, last name, email, password. Status `incomplete`. |
+| `POST` | `/api/auth/login` | verify the password, set the signed httpOnly cookie |
+| `POST` | `/api/auth/logout` | clear the cookie |
+| `POST` | `/api/checkout` | **authenticated.** Create a Stripe Checkout session, return its URL |
+| `POST` | `/api/webhooks/stripe` | verify signature, apply idempotently, return 2xx fast |
+| `GET` | `/api/subscribers/me` | **authenticated.** Plan, status, period end |
 
-No admin routes, no list endpoint, no pagination. Nothing the brief did not ask for.
+**`/api/signup` is gone, split in two.** With accounts, signing up and paying are separate
+acts: `register` creates the person, `checkout` sells them the plan. Required test 1 splits
+the same way — register creates exactly one row, checkout returns a Stripe URL.
+
+The webhook stays unauthenticated. Stripe's signature *is* its authentication, and Stripe
+cannot present a cookie.
+
+No admin routes, no list endpoint, no pagination, no password reset. Reset is a real gap and
+is named in the report rather than quietly skipped.
 
 ### Webhook events handled
 
@@ -228,9 +242,25 @@ retry and which are not.
 
 | Tier | Hours |
 |---|---|
-| P0 (Phases 1 to 5, 8) | ~10.5 |
+| P0 (Phases 0 to 5, 8) | ~13 |
 | P1 (Phases 6, 7) | ~3.5 |
-| **Total** | **~14** |
+| **Total** | **~16.5** |
+
+Up from 14: accounts and login add ~2h across the API, the UI and the tests, and Phase 0
+below adds ~0.5h of structure that Phase 4 no longer has to do.
+
+### Phase 0, containers and the layered skeleton (~1.5h) `P0`
+Moved ahead of Phase 1 by operator decision: containerise the layered structure before any
+feature exists, so every later phase is written inside a stack that already runs.
+
+Every layer folder from `docs/ARCHITECTURE.md` created with an `__init__.py` that names what
+the layer owns. Real code for `core/config.py`, `db/session.py`, `db/base.py`,
+`controllers/health_controller.py` and `routes/api_router.py` only. No model, no Stripe, no
+auth yet.
+
+**Gate:** `docker compose up --build` brings up db, api and web; `/api/health` returns 200
+without touching the database and `/api/health/ready` returns 200 having run `SELECT 1`
+against Postgres. The second one is what proves the db layer is wired, not assumed.
 
 **The stated deadline is today.** Fourteen hours does not fit in what is left of it. The
 realistic options, in order:
@@ -265,8 +295,10 @@ gets attempted.
 
 Explicitly **not** building, and saying so in the report if asked:
 
-- Authentication or sessions. The brief says one page shows *that person* their plan.
-  Email lookup via the Checkout redirect satisfies it. Auth is a different deliverable.
+- **Password reset, email verification, OAuth, "remember me", rate limiting on login.**
+  Accounts are in (see `AGENTS.md` section 11); the rest of an auth system is not. Named in
+  the report as the known gap, because a login without a reset flow is incomplete and
+  pretending otherwise fails on the reviewer's first question.
 - Multiple plans or tiers. One monthly plan.
 - Admin dashboard, user list, or reporting.
 - Email notifications.

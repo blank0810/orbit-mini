@@ -88,7 +88,28 @@ It is the only code that mutates money state, and the only code a security revie
 line by line: signature verification, the idempotency guard, three event handlers. Isolating
 it means "the dangerous file" is one file.
 
-### Open: how the dashboard identifies the person
+### Resolved: real accounts
+
+**Decided by the operator.** Not the signed-link alternative below, and not `{email}` in the
+path: first name, last name, email and password, with a login.
+
+New files, all inside the closed layer list:
+
+```
+core/dependencies.py                 get_current_subscriber, reads the cookie
+services/auth_service.py             hash, verify, issue and decode the JWT
+controllers/auth_controller.py       register · login · logout
+schemas/auth_schema.py               register and login request shapes
+```
+
+`password_hash` is a column on `subscriber`, so R6's one table survives. The session is a
+**stateless signed JWT in an httpOnly cookie** — a sessions table would be a second table.
+
+The rule that does not bend: the password hash is never returned by any response and never
+logged. `subscriber_schema.py` is the only shape the dashboard ever sees, and it has no
+password field to accidentally populate.
+
+### Superseded: the signed-link alternative
 
 `docs/IMPLEMENTATION_PLAN.md` section 3 specifies `GET /api/subscribers/{email}`. That works,
 and it is what the brief's wording supports, but on a public domain it means anyone can type
