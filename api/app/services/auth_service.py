@@ -69,7 +69,8 @@ def register_subscriber(session: Session, data: RegisterRequest) -> Subscriber:
         first_name=data.first_name,
         last_name=data.last_name,
         password_hash=hash_password(data.password),
-        plan_name=get_settings().plan_name,
+        # A new account has not chosen a plan yet; plan_name is written when checkout starts.
+        plan_name="none",
         status="incomplete",
     )
     return subscriber_repository.create(session, subscriber)

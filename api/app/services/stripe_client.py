@@ -6,6 +6,7 @@ writable without live Stripe calls or raw Stripe objects leaking into business l
 
 import json
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Any
 from uuid import UUID
 
@@ -36,22 +37,66 @@ def _require_key() -> str:
     return key
 
 
+# Resolution is cached per process, so changing a default price in Stripe needs a restart.
+# This deliberately keeps a network call out of every checkout.
+@lru_cache
+def resolve_price_id(product_id: str) -> str:
+    if not product_id:
+        settings = get_settings()
+        unset = [
+            name
+            for name, value in (
+                ("STRIPE_PRODUCT_ID_STARTER", settings.stripe_product_id_starter),
+                ("STRIPE_PRODUCT_ID_PRO", settings.stripe_product_id_pro),
+            )
+            if not value
+        ]
+        raise StripeNotConfigured(
+            f"Stripe product id is unset: {', '.join(unset) or 'no product id supplied'}"
+        )
+    try:
+        product = stripe.Product.retrieve(
+            product_id, expand=["default_price"], api_key=_require_key()
+        )
+        price = getattr(product, "default_price", None)
+        if not price:
+            raise StripeNotConfigured(
+                "The product has no default price set in Stripe; one must be added"
+            )
+        if isinstance(price, str):
+            price = stripe.Price.retrieve(price, api_key=_require_key())
+        # These mistakes stay silent until checkout fails in front of someone. Validating
+        # at resolution lets startup callers fail early rather than during a demo checkout.
+        if price.recurring is None:
+            raise StripeNotConfigured(
+                "The price is one-time, but subscription mode needs a recurring price"
+            )
+        if price.currency != "gbp":
+            raise StripeNotConfigured(
+                f"The price currency is {price.currency}; subscription prices must use gbp"
+            )
+        return price.id
+    except stripe.InvalidRequestError:
+        # Do not include Stripe's exception text: configuration errors must never expose keys.
+        raise StripeNotConfigured(
+            f"Could not resolve the default price for Stripe product {product_id}"
+        ) from None
+
+
 def create_checkout_session(
     *,
     subscriber_id: UUID,
     email: str,
     customer_id: str | None,
+    price_id: str,
     success_url: str,
     cancel_url: str,
 ) -> CheckoutSession:
-    settings = get_settings()
     api_key = _require_key()
-    if not settings.stripe_price_id:
-        raise StripeNotConfigured("STRIPE_PRICE_ID is not configured")
     customer_options = {"customer": customer_id} if customer_id else {"customer_email": email}
     checkout = stripe.checkout.Session.create(
         mode="subscription",
-        line_items=[{"price": settings.stripe_price_id, "quantity": 1}],
+        line_items=[{"price": price_id, "quantity": 1}],
         # CRITICAL: this is the ONLY link from completed Checkout to our subscriber row.
         # Stripe echoes it on the webhook event; without it we cannot identify whose
         # subscription just activated.

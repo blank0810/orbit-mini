@@ -18,14 +18,14 @@ class Settings(BaseSettings):
     # Generate with: openssl rand -hex 32
     jwt_secret: str = Field(min_length=32)
     jwt_expire_minutes: int = 60 * 24 * 7  # 7 days; there is no refresh flow.
-    plan_name: str = "ScaleSage Starter"
     cookie_name: str = "orbit_session"
     # jwt_secret has no default: a default signing key makes sessions forgeable, a live
     # vulnerability. An empty Stripe API key has no security consequence: it cannot call
     # Stripe. Fail clearly at the point of use so non-payment features can still start.
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
-    stripe_price_id: str = ""
+    stripe_product_id_starter: str = ""
+    stripe_product_id_pro: str = ""
     web_base_url: str = "http://localhost:7301"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
