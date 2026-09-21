@@ -78,12 +78,34 @@ Build what the brief asks for and nothing beyond it.
 **The exception:** correctness, tests, and error handling are never "not needed yet."
 YAGNI trims features, never rigor.
 
-### 3.3 KISS
+### 3.3 Layered, and only these layers
 
-- Boring, well-known tools over clever ones. Jakob's Law applies to codebases too: the
-  next reader expects it to work like the framework's documentation says it works.
-- Flat over nested. A 40-line module beats four 10-line modules that only call each other.
-- No abstraction earns its place until it has three concrete callers.
+Boring, well-known tools over clever ones. Jakob's Law applies to codebases too: the next
+reader expects it to work the way they already work. Here that means the layering a
+Laravel or NestJS developer knows by reflex, because that is who maintains this next.
+
+Every surface uses the same vocabulary, whatever language it is written in:
+
+| Layer | Owns | Never does |
+|---|---|---|
+| **controller** | validate in, call one service, shape the response | business rules, queries |
+| **service** | business logic, orchestration, external services | HTTP, SQL |
+| **repository** | every query touching one table | business rules |
+| **model** | the table declaration | queries, business rules |
+| **schema** | request and response shapes | anything else |
+
+`api/` is Python, `web/` is TypeScript, `mobile/` is Dart. The same words in all three, so
+a reviewer opening any surface finds the same shape. Full tree: `docs/ARCHITECTURE.md`.
+
+What still binds:
+
+- **These layers and no others.** No `managers/`, no `helpers/`, no `utils/` dumping
+  ground, no facade wrapping a facade. The table above is a closed list.
+- **A thin file is the convention working. An invented layer is not.** A 25-line
+  controller is correct. A `SubscriberServiceFactoryProvider` is not.
+- **One module per external boundary.** Stripe, Postgres, Runpod and the API each get
+  exactly one file that talks to them, and nothing else imports them. This is what makes
+  the required tests writable: one thing to stub, not twelve.
 - A comment that explains *why* beats a helper that hides *what*.
 
 ### 3.4 Readable beats short
@@ -174,8 +196,10 @@ orbit-mini/
 ├── CLAUDE.md              # Claude Code specifics, points here
 ├── README.md              # how to run it, written for the reviewer
 ├── docs/
-│   └── IMPLEMENTATION_PLAN.md
-├── api/                   # FastAPI: routes, models, stripe, tests, Dockerfile
+│   ├── IMPLEMENTATION_PLAN.md
+│   ├── ARCHITECTURE.md    # the layer contract and the full tree
+│   └── design-tokens.md   # scalesage.ai palette, type, the plan we sell
+├── api/                   # FastAPI, layered: controllers/services/repositories/models
 ├── web/                   # Next.js dashboard
 ├── mobile/                # Flutter component
 ├── media/                 # FFmpeg + Runpod worker
