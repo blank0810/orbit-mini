@@ -1,0 +1,41 @@
+# Secrets, never commit
+.env
+.env.*
+!.env.example
+infra/cloudflared/*.json
+infra/cloudflared/cert.pem
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# Flutter / Dart
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins*
+mobile/.packages
+
+# Media artifacts
+media/input/
+media/output/
+*.mp4
+*.mov
+!docs/**/*.mp4
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
