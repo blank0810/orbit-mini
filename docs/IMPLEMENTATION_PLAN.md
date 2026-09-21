@@ -67,6 +67,26 @@ not new infrastructure.
 Fastest path to R1, and the correct one. No card data touches our stack, so there is no PCI
 surface to defend in the report. Subscription mode, one monthly price, test mode throughout.
 
+### 1.3b The Stripe catalogue lives in Stripe, not in this codebase
+
+**Operator decision.** The product and the recurring GBP price are created by hand in the
+Stripe dashboard. The application never calls `Product.create` or `Price.create`, and holds
+no hard-coded amount.
+
+`stripe_client.create_checkout_session` takes `STRIPE_PRICE_ID` from the environment and
+passes it through. That is the whole integration surface for the catalogue.
+
+Why this is right, not merely easier:
+- A price is configuration a business changes without a deploy. Encoding £597 in Python
+  means a price change becomes a pull request.
+- Creating catalogue objects at runtime needs its own idempotency story, or every restart
+  risks a duplicate product. That is a second correctness problem bought for nothing.
+- The amount never appears in our code, so it cannot drift from what Stripe actually charges.
+  The dashboard reads `plan_name` from our row and the price from Stripe's Checkout page.
+
+The one consequence: `STRIPE_PRICE_ID` must be a **recurring** price in **GBP**. A one-time
+price fails at `mode="subscription"`, and a USD price contradicts `docs/design-tokens.md`.
+
 ### 1.4 One table means one table
 
 `subscriber` holds identity, the Stripe ids, the plan, the status and the timestamps.
