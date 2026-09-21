@@ -39,3 +39,7 @@ media/output/
 *.swp
 .idea/
 .vscode/
+
+# Local tooling artifacts, not part of the deliverable
+.playwright-mcp/
+eli5/
