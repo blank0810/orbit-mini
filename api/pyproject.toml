@@ -6,6 +6,7 @@ dependencies = [
     "pwdlib[argon2]",  # argon2id password hashing
     "pyjwt",  # stateless session token
     "fastapi",
+    "stripe",
     "uvicorn[standard]",
     "pydantic-settings",
     "sqlalchemy",
