@@ -167,8 +167,15 @@ Stripe stubbed at the boundary. Transactional fixture against a real Postgres.
 
 **Gate:** `uv run pytest -q` passes, and you read the output.
 
-### Phase 3, the dashboard (~2.5h) `P0` R3 R4 R9
-Mobile-first at 390px. Three views:
+### Phase 3, the dashboard (~3.5h) `P0` R3 R4 R9
+Mobile-first at 390px. **Five views, not three** - adding accounts added two screens, and the
+estimate moves from 2.5h to 3.5h with them. Naming that here rather than discovering it mid-build:
+
+- **Login:** email, password, one primary action. Carries the "Use demo account" button that
+  fills both fields, with the credentials in plain text beneath it.
+- **Register:** first name, last name, email, password. Four fields is inside Miller's Law
+  without grouping. Password rules stated up front, never revealed only on failure - Nielsen's
+  error-prevention heuristic.
 - **Pricing / signup:** one plan, one primary action. Hick's Law says one plan means the
   decision is yes or no, so do not build a comparison table.
 - **Pending:** the state between redirect and webhook arrival. Doherty Threshold: this wait
@@ -242,9 +249,9 @@ retry and which are not.
 
 | Tier | Hours |
 |---|---|
-| P0 (Phases 0 to 5, 8) | ~13 |
+| P0 (Phases 0 to 5, 8) | ~14 |
 | P1 (Phases 6, 7) | ~3.5 |
-| **Total** | **~16.5** |
+| **Total** | **~17.5** |
 
 Up from 14: accounts and login add ~2h across the API, the UI and the tests, and Phase 0
 below adds ~0.5h of structure that Phase 4 no longer has to do.
