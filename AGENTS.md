@@ -129,7 +129,7 @@ reconsider the interaction before touching the pixels.
 
 | Law | What it demands here |
 |---|---|
-| **Hick's Law** | Every added choice slows the decision after it. Count the actions, links and fields competing on a screen. **One primary action per view.** The dashboard has exactly one: manage the subscription. Pricing shows one plan, so the choice is yes or no, not a comparison matrix. |
+| **Hick's Law** | Every added choice slows the decision after it. Count the actions, links and fields competing on a screen. **One primary action per view.** The dashboard has exactly one: manage the subscription. Pricing shows **two** plans, Starter and Pro, and they are **ranked, not flat**: Pro carries a recommended marker exactly as scalesage.ai does. Two ranked options is a decision; two equal cards is a comparison task. A third tier would be a matrix, which is why Max is excluded. |
 | **Fitts's Law** | Frequent and primary actions get bigger targets, placed near where the thumb already is. On mobile that is the lower half of the screen, not a 32px link in a header. Pad hit areas beyond the visible box. |
 | **Jakob's Law** | Users expect it to behave like the SaaS dashboards they already use. Do not reinvent nav, status badges, billing pages or forms without a clear payoff. |
 | **Miller's Law** | Chunk. Past roughly 7 items, a list or form needs grouping, sections or pagination. Group the dashboard into identity, plan, and billing-history regions. |

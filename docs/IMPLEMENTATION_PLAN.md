@@ -67,6 +67,18 @@ not new infrastructure.
 Fastest path to R1, and the correct one. No card data touches our stack, so there is no PCI
 surface to defend in the report. Subscription mode, one monthly price, test mode throughout.
 
+### 1.3c Two plans, and the client never names a price
+
+Starter and Pro. The request body carries a plan **key**, never a price id.
+
+The server holds the key-to-price-id mapping and rejects anything not in it. A client-supplied
+price id would let any caller check out against any price in the account, and AGENTS.md section
+4 already says under Tesler's Law that the user should never handle a price id. The plan key is
+validated as a closed set, so an unknown value is a 422 before Stripe is ever called.
+
+`plan_name` on the row is written from that same server-side mapping, so the stored name can
+never disagree with the price the customer was actually charged.
+
 ### 1.3b The Stripe catalogue lives in Stripe, not in this codebase
 
 **Operator decision.** The product and the recurring GBP price are created by hand in the
@@ -138,7 +150,7 @@ Deliberately small. Four endpoints plus health.
 | `POST` | `/api/auth/register` | create the account: first name, last name, email, password. Status `incomplete`. |
 | `POST` | `/api/auth/login` | verify the password, set the signed httpOnly cookie |
 | `POST` | `/api/auth/logout` | clear the cookie |
-| `POST` | `/api/checkout` | **authenticated.** Create a Stripe Checkout session, return its URL |
+| `POST` | `/api/checkout` | **authenticated.** Body `{"plan": "starter"|"pro"}`. Create a Stripe Checkout session, return its URL |
 | `POST` | `/api/webhooks/stripe` | verify signature, apply idempotently, return 2xx fast |
 | `GET` | `/api/subscribers/me` | **authenticated.** Plan, status, period end |
 
@@ -363,7 +375,9 @@ This goes in the end-of-day report as a named gap. `AGENTS.md` section 12.
   Accounts are in (see `AGENTS.md` section 11); the rest of an auth system is not. Named in
   the report as the known gap, because a login without a reset flow is incomplete and
   pretending otherwise fails on the reviewer's first question.
-- Multiple plans or tiers. One monthly plan.
+- A third tier. **Two** plans ship, Starter and Pro, matching scalesage.ai's own pricing
+  page. Max is waitlist-only on their real site, so offering it for self-serve checkout would
+  misrepresent the product.
 - Admin dashboard, user list, or reporting.
 - Email notifications.
 - CI. There is no CI requirement in the brief. Tests run locally and in compose.
