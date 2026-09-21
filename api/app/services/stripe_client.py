@@ -133,6 +133,18 @@ def construct_event(payload: bytes, signature_header: str) -> dict[str, Any]:
     return json.loads(payload)
 
 
+def retrieve_subscription(subscription_id: str) -> dict[str, Any]:
+    """Read a subscription as a plain dict.
+
+    A Checkout session carries no billing period; only the Subscription object does. This
+    is how the renewal date reaches the dashboard at the moment the payment lands, rather
+    than waiting for a later customer.subscription.* event whose arrival order Stripe does
+    not guarantee.
+    """
+    subscription = stripe.Subscription.retrieve(subscription_id, api_key=_require_key())
+    return dict(subscription.to_dict())
+
+
 def cancel_subscription(subscription_id: str) -> str:
     """Cancel a subscription immediately. Returns its resulting status.
 

@@ -102,12 +102,23 @@ export default function DashboardPage() {
           <StatusBadge status={me.status} />
         </div>
 
-        <div className="mt-8 border-t border-border pt-6">
-          <p className="font-mono text-xs tracking-widest text-text-3 uppercase">
-            {me.status === "canceled" ? "Access until" : "Renews"}
+        {/* Only rendered when a date exists. A row reading "Renews \u2014" tells the
+            reader nothing and looks like a bug; absence of the row is the honest signal
+            that no billing period has been recorded yet. */}
+        {me.current_period_end ? (
+          <div className="mt-8 border-t border-border pt-6">
+            <p className="font-mono text-xs tracking-widest text-text-3 uppercase">
+              {me.status === "canceled" ? "Access until" : "Renews"}
+            </p>
+            <p className="mt-2 text-lg">{formatDate(me.current_period_end)}</p>
+          </div>
+        ) : null}
+
+        {subscribed && !me.current_period_end ? (
+          <p className="mt-8 border-t border-border pt-6 text-sm text-text-3">
+            Waiting for Stripe to confirm the billing period. This updates on its own.
           </p>
-          <p className="mt-2 text-lg">{formatDate(me.current_period_end)}</p>
-        </div>
+        ) : null}
       </Card>
 
       {/* One primary action per view. When there is no plan, the primary action is to
