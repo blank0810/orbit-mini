@@ -141,7 +141,7 @@ Estimates are working hours, honest, not optimistic.
    `last_stripe_event_id`, the three handlers, fast 2xx.
 5. `GET /api/subscribers/{email}`.
 
-**Gate:** `stripe listen --forward-to localhost:8000/api/webhooks/stripe`, run a real test
+**Gate:** `stripe listen --forward-to localhost:7302/api/webhooks/stripe`, run a real test
 checkout, and read the row out of Postgres. Do not proceed on belief.
 
 ### Phase 2, tests (~1.5h) `P0` R7
@@ -178,8 +178,10 @@ page, the Vercel SVGs and the default favicon before anything else.
 system. Test it by actually removing the volume first.
 
 ### Phase 5, Cloudflare Tunnel (~1h) `P0` R10
-Named tunnel, DNS route to `orbit.ehnand.com`, ingress rules sending `/api/*` to `api:8000`
-and everything else to `web:3000`. No extra reverse proxy: cloudflared's own path routing is
+Named tunnel, DNS route to `orbit.ehnand.com`, ingress rules sending `/api/*` to the API
+and everything else to the web container. Those targets are `api:8000` and `web:3000` if
+`cloudflared` runs as a compose service, or `localhost:7302` and `localhost:7301` if it runs
+on the host. **Open decision, see the note at the end of this section.** No extra reverse proxy: cloudflared's own path routing is
 enough, and a second proxy is a component with no job.
 
 Then point the **Stripe webhook endpoint at the public URL**, not at `stripe listen`. This is

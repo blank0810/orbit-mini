@@ -3,9 +3,14 @@
 ## Read AGENTS.md first
 
 **[`AGENTS.md`](./AGENTS.md) is the operating contract for this repository and it governs.**
-Stack boundaries, YAGNI and KISS, the UI/UX laws, the accessibility floor, testing
-requirements, security rules, git conventions and the definition of done all live there,
-because Codex and any other agent read the same file.
+Stack boundaries, YAGNI, the layer contract, the UI/UX laws, the accessibility floor,
+testing requirements, security rules, git conventions and the definition of done all live
+there, because Codex and any other agent read the same file.
+
+The layer contract in `AGENTS.md` section 3.3 is expanded, with the full tree for every
+surface, in [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md). Read it before creating a
+file in `api/`, `web/`, `mobile/` or `media/`: the layer list is closed, and a new folder
+outside it is a bug, not a judgement call.
 
 This file holds only what is specific to Claude Code. It never contradicts `AGENTS.md`.
 If something here appears to conflict, `AGENTS.md` wins and this file is the bug.
@@ -77,7 +82,10 @@ skills for `web/`. Arbitrate, do not assume.
 - **Never print or log a Stripe secret key, webhook signing secret, Runpod key, or tunnel
   credential**, including inside a debugging session.
 - **Never commit `.env`**, `infra/cloudflared/*.json`, or any tunnel credential file.
-- **Check the port is free before binding.** Ports in play: 3000 web, 8000 api, 5432 postgres.
+- **Check the port is free before binding.** Ports in play: **7301 web, 7302 api,
+  7303 postgres**, all bound to `127.0.0.1`. Not 3000/8000/5432 — every one of those is
+  already claimed by another project on this machine. Reasoning in `docs/ARCHITECTURE.md`
+  section 7.
 - **Do not trigger browser dialogs** during Playwright or Chrome verification. Console logs
   and `read_console_messages` instead.
 - **Do not add a dependency without saying why** in the same message. Every dependency is a

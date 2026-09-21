@@ -55,7 +55,7 @@ api/
     │   └── subscriber_repository.py   every query touching subscriber
     │
     ├── schemas/
-    │   ├── checkout_schema.py         signup request / response
+    │   ├── signup_schema.py           signup request / response
     │   └── subscriber_schema.py       dashboard response
     │
     ├── services/
@@ -64,8 +64,8 @@ api/
     │   └── stripe_client.py           the Stripe SDK boundary
     │
     ├── controllers/
-    │   ├── checkout_controller.py     POST /api/checkout
-    │   ├── subscriber_controller.py   GET  /api/subscribers/me
+    │   ├── signup_controller.py       POST /api/signup
+    │   ├── subscriber_controller.py   GET  /api/subscribers/... (see note)
     │   ├── webhook_controller.py      POST /api/webhooks/stripe
     │   └── health_controller.py       GET  /api/health
     │
@@ -88,6 +88,21 @@ It is the only code that mutates money state, and the only code a security revie
 line by line: signature verification, the idempotency guard, three event handlers. Isolating
 it means "the dangerous file" is one file.
 
+### Open: how the dashboard identifies the person
+
+`docs/IMPLEMENTATION_PLAN.md` section 3 specifies `GET /api/subscribers/{email}`. That works,
+and it is what the brief's wording supports, but on a public domain it means anyone can type
+any address and read that customer's plan, status and billing date.
+
+The alternative is one extra column, `access_token`: a random opaque string minted at signup
+and carried in the Stripe success redirect, read back as `GET /api/subscribers/me?token=...`.
+No password, no login screen, no account — just an unguessable link, the same model as a
+Stripe receipt.
+
+**Not decided by the operator yet.** Until it is, the controller is written against whichever
+the plan says, and the layer shape is identical either way: the token check belongs in
+`subscription_service.py`, not in the controller and not in the repository.
+
 ### `stripe_client.py`, never `stripe.py`
 
 A module named `stripe.py` shadows the installed `stripe` package and breaks the import from
@@ -96,9 +111,9 @@ inside the package itself. Small, and genuinely nasty to debug.
 ### A request, end to end
 
 ```
-POST /api/checkout
+POST /api/signup
   └─ routes/api_router.py          matches the path
-     └─ checkout_controller.py     Pydantic validates the body, calls one service
+     └─ signup_controller.py       Pydantic validates the body, calls one service
         └─ subscription_service.py the business rule: upsert, never downgrade an
            │                       active subscriber back to incomplete
            ├─ subscriber_repository.py   find / create the row

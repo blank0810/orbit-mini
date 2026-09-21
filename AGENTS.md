@@ -216,16 +216,16 @@ Keep the root clean. New top-level files need a reason.
 # Full stack
 docker compose -f infra/docker-compose.yml up --build
 
-# API only
-cd api && uv run uvicorn app.main:app --reload --port 8000
+# API only  (7302: 8000 is taken by other projects on this machine)
+cd api && uv run uvicorn app.main:app --reload --port 7302
 cd api && uv run pytest -q
 
-# Web only
-cd web && pnpm dev
+# Web only  (7301: 3000 is taken too)
+cd web && pnpm dev --port 7301
 cd web && pnpm lint && pnpm build
 
 # Stripe webhooks during local dev
-stripe listen --forward-to localhost:8000/api/webhooks/stripe
+stripe listen --forward-to localhost:7302/api/webhooks/stripe
 
 # Public tunnel
 cloudflared tunnel --config infra/cloudflared/config.yml run
