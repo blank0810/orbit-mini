@@ -4,6 +4,7 @@ The test suite stubs exactly these boundary functions, which makes the required 
 writable without live Stripe calls or raw Stripe objects leaking into business logic.
 """
 
+import json
 from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
@@ -76,7 +77,12 @@ def construct_event(payload: bytes, signature_header: str) -> dict[str, Any]:
     if not secret:
         raise StripeNotConfigured("STRIPE_WEBHOOK_SECRET is not configured")
     try:
-        event = stripe.Webhook.construct_event(payload, signature_header, secret)
+        stripe.Webhook.construct_event(payload, signature_header, secret)
     except (stripe.SignatureVerificationError, ValueError):
         raise InvalidWebhookSignature("Invalid webhook signature or payload") from None
-    return dict(event)
+    # construct_event is called for its verification side effect only. Its return value is a
+    # stripe.Event, which is not a mapping in stripe-python 15.x, and to_dict() leaves nested
+    # objects as StripeObject. The handlers walk nested structures, so parse the bytes we
+    # already verified and hand back a plain recursive dict instead. This also keeps the rest
+    # of the codebase free of any Stripe type.
+    return json.loads(payload)
