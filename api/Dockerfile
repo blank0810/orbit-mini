@@ -13,6 +13,8 @@ RUN groupadd --gid 10001 orbit && useradd --uid 10001 --gid 10001 orbit
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 COPY app ./app
+COPY alembic.ini ./alembic.ini
+COPY alembic ./alembic
 RUN chown -R orbit:orbit /app
 USER orbit
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1

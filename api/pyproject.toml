@@ -8,6 +8,8 @@ dependencies = [
     "pydantic-settings",
     "sqlalchemy",
     "psycopg[binary]",
+    "alembic",
+    "email-validator",  # required by pydantic EmailStr
 ]
 
 [dependency-groups]
