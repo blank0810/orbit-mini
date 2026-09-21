@@ -16,3 +16,12 @@ class PlanRead(BaseModel):
     key: str
     display_name: str
     recommended: bool
+
+
+class ChangePlanRequest(BaseModel):
+    # Same closed set as checkout: the client names a plan, never a price.
+    plan: Literal["starter", "pro"]
+
+
+class ChangePlanResponse(BaseModel):
+    plan_name: str

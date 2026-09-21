@@ -19,6 +19,14 @@ class StripeNotConfigured(Exception):
     pass
 
 
+class SubscriptionNotFound(Exception):
+    """The subscription id we hold does not exist in Stripe.
+
+    Reachable with seeded or generated demo rows, whose ids are deliberately fake. It is a
+    conflict with our own state, not a Stripe outage, so it must not surface as a 500.
+    """
+
+
 class InvalidWebhookSignature(Exception):
     pass
 
@@ -143,6 +151,36 @@ def retrieve_subscription(subscription_id: str) -> dict[str, Any]:
     """
     subscription = stripe.Subscription.retrieve(subscription_id, api_key=_require_key())
     return dict(subscription.to_dict())
+
+
+def change_subscription_price(subscription_id: str, new_price_id: str) -> dict[str, Any]:
+    """Move a live subscription onto a different price, prorated.
+
+    A subscription is billed through its *items*, not directly through a price, so the
+    existing item has to be read first and then repointed. Replacing the items list
+    without an id would delete the current item and add a new one, which Stripe treats as
+    a cancel-and-resubscribe and would restart the billing cycle.
+
+    proration_behavior="create_prorations" is what makes an upgrade fair: Stripe credits
+    the unused remainder of the old plan and charges the difference for the rest of the
+    period, rather than billing a full second month on the spot.
+    """
+    api_key = _require_key()
+    try:
+        subscription = stripe.Subscription.retrieve(subscription_id, api_key=api_key)
+        items = subscription.get("items", {}).get("data", [])
+        if not items:
+            raise SubscriptionNotFound(f"{subscription_id} has no billable items")
+        updated = stripe.Subscription.modify(
+            subscription_id,
+            items=[{"id": items[0]["id"], "price": new_price_id}],
+            proration_behavior="create_prorations",
+            api_key=api_key,
+        )
+    except stripe.InvalidRequestError:
+        # Never include the api key in the message.
+        raise SubscriptionNotFound(f"No such subscription: {subscription_id}") from None
+    return dict(updated.to_dict())
 
 
 def cancel_subscription(subscription_id: str) -> str:
