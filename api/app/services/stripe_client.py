@@ -131,3 +131,27 @@ def construct_event(payload: bytes, signature_header: str) -> dict[str, Any]:
     # already verified and hand back a plain recursive dict instead. This also keeps the rest
     # of the codebase free of any Stripe type.
     return json.loads(payload)
+
+
+def cancel_subscription(subscription_id: str) -> str:
+    """Cancel a subscription immediately. Returns its resulting status.
+
+    Used only by the demo reset. Cancelling is safe to retry: a subscription already
+    cancelled reports `canceled` rather than erroring, and one Stripe has never heard of
+    raises InvalidRequestError, which the caller treats as already gone.
+    """
+    subscription = stripe.Subscription.cancel(subscription_id, api_key=_require_key())
+    return str(subscription.status)
+
+
+def delete_customer(customer_id: str) -> bool:
+    """Delete a customer. Returns False when Stripe has no such customer.
+
+    Test-mode customers accumulate with every rehearsal, and a dashboard full of them
+    makes the real one hard to find during a recording.
+    """
+    try:
+        result = stripe.Customer.delete(customer_id, api_key=_require_key())
+    except stripe.InvalidRequestError:
+        return False
+    return bool(getattr(result, "deleted", False))
