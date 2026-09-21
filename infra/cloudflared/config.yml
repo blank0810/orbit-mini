@@ -1,0 +1,28 @@
+# Cloudflare Tunnel ingress for orbit.ehnand.com
+#
+# The tunnel dials OUT from this machine and holds the connection open, so nothing is
+# accepted inbound and no router port is forwarded. Cloudflare owns the public address.
+#
+# Runs as a compose service in the PRODUCTION overlay only. It is deliberately absent from
+# the base compose file: `docker compose up` on a laptop must never publish that laptop to
+# the internet.
+
+tunnel: 2309621f-ce85-4890-ac89-b38d2250358f
+credentials-file: /etc/cloudflared/2309621f-ce85-4890-ac89-b38d2250358f.json
+
+# Targets are compose service names on the internal network, not host ports. cloudflared
+# runs inside the same network, so it never touches 7301/7302 at all.
+ingress:
+  # The API keeps its /api prefix when forwarded, and the FastAPI router is mounted at
+  # /api, so the path passes through unchanged.
+  - hostname: orbit.ehnand.com
+    path: ^/api/.*
+    service: http://api:8000
+
+  - hostname: orbit.ehnand.com
+    service: http://web:3000
+
+  # Anything else, including any other hostname, is refused here. pgAdmin has no rule at
+  # all, which is what keeps a database admin UI off the public internet: it is not a
+  # firewall decision, it is simply unroutable.
+  - service: http_status:404

@@ -26,3 +26,23 @@ services:
 
   pgadmin:
     env_file: ../.env.prod
+
+  # Present ONLY in the production overlay. The base compose file has no tunnel, so a
+  # local `docker compose up` cannot expose the machine to the internet by accident.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    # Runs as the host user that owns the credentials file, so that file can stay 0400.
+    # The alternatives are worse: chmod 644 makes a tunnel credential readable by every
+    # local account, and running as root inside the container to read a 0400 file trades
+    # a real privilege boundary for a permission bit.
+    user: "1000:1000"
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      # Read-only: the container needs the credentials and config, never to write them.
+      - ./cloudflared:/etc/cloudflared:ro
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    restart: unless-stopped
