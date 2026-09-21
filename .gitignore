@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!.env.prod.example
 infra/cloudflared/*.json
 infra/cloudflared/cert.pem
 

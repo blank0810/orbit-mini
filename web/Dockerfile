@@ -13,6 +13,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# NEXT_PUBLIC_* is inlined into the client bundle by `next build`, so it must be a build
+# arg. Supplying it only at runtime via env_file would leave the compiled JavaScript
+# pointing at whatever value was set when the image was made.
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 RUN pnpm build
 
 FROM node:22-alpine AS runner

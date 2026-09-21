@@ -32,6 +32,10 @@ services:
     build:
       context: ../web
       dockerfile: Dockerfile
+      args:
+        # Baked into the client bundle. The production value is supplied by
+        # docker-compose.prod.yml, which overrides this.
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:7302
     env_file: ../.env
     ports: ["127.0.0.1:7301:3000"]
     depends_on:

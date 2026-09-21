@@ -39,7 +39,9 @@ It is a scored technical deliverable. Two things follow from that:
 
 - No business logic in Next.js route handlers or server actions.
 - No direct database access from `web/`. Ever. It talks to the API over HTTP.
-- No Stripe secret key in `web/`. The publishable key is the only Stripe value the browser sees.
+- **No Stripe key of any kind in `web/`.** Not even a publishable one: Checkout is a hosted
+  redirect, so the browser never loads Stripe.js and has nothing to authenticate with. A
+  publishable key would only be needed for Elements or a custom card form, which we do not build.
 - If you are tempted to "just do it in Next.js because it is faster," that is the exact
   shortcut the brief is testing for. Do not take it.
 

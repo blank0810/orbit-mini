@@ -1,0 +1,28 @@
+# Production overlay for the tunnelled deployment at https://orbit.ehnand.com
+#
+#   docker compose -f infra/docker-compose.yml -f infra/docker-compose.prod.yml up -d --build
+#
+# It changes exactly two things: every service reads .env.prod instead of .env, and the web
+# image is built with the public API base URL rather than the localhost one.
+#
+# Ports stay bound to 127.0.0.1. cloudflared runs alongside and reaches them over loopback,
+# which is why nothing here publishes on 0.0.0.0. pgAdmin keeps running but the tunnel's
+# ingress rules never route to it, so it stays unreachable from the internet.
+
+services:
+  db:
+    env_file: ../.env.prod
+
+  api:
+    env_file: ../.env.prod
+
+  web:
+    env_file: ../.env.prod
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: https://orbit.ehnand.com
+
+  pgadmin:
+    env_file: ../.env.prod
