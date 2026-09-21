@@ -8,8 +8,18 @@ class Settings(BaseSettings):
     database_url: str
     cors_origins: str = ""
     environment: str = "development"
+    jwt_secret: str = "dev-only-insecure-change-me"
+    jwt_expire_minutes: int = 60 * 24 * 7  # 7 days; there is no refresh flow.
+    plan_name: str = "ScaleSage Starter"
+    cookie_name: str = "orbit_session"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @property
+    def cookie_secure(self) -> bool:
+        # Secure is derived from the environment, not a separate switch, so it cannot
+        # be set inconsistently.
+        return self.environment != "development"
 
     @property
     def cors_origin_list(self) -> list[str]:

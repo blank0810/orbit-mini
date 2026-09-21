@@ -3,6 +3,8 @@ name = "orbit-mini-api"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "pwdlib[argon2]",  # argon2id password hashing
+    "pyjwt",  # stateless session token
     "fastapi",
     "uvicorn[standard]",
     "pydantic-settings",

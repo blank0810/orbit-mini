@@ -1,5 +1,7 @@
 from collections.abc import Iterator
+from typing import Annotated
 
+from fastapi import Depends
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -15,3 +17,8 @@ def get_session() -> Iterator[Session]:
         yield session
     finally:
         session.close()
+
+
+# Injected session, as a type alias. Annotated keeps Depends out of argument defaults, which
+# is both the current FastAPI idiom and what ruff B008 asks for.
+DbSession = Annotated[Session, Depends(get_session)]
