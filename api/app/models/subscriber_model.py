@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, String, func
+from sqlalchemy import Boolean, DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -29,6 +29,11 @@ class Subscriber(Base):
     current_period_end: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # Marks a generated throwaway demo row. The system may DELETE these without asking,
+    # so the flag is explicit rather than inferred from the email: a real customer who
+    # happened to register a demo-looking address must never be evicted by a convention.
+    # The advertised demo account is deliberately NOT flagged and so can never be evicted.
+    is_disposable: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     # Idempotency guard: the last Stripe event applied to this row rejects a replayed delivery.
     last_stripe_event_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(

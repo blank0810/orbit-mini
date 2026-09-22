@@ -41,6 +41,9 @@ def seed() -> str:
                 password_hash=hash_password(DEMO_PASSWORD),
                 plan_name="ScaleSage Pro",
                 status="active",
+                # Never disposable: its credentials are printed on the login page, so the
+                # cap must not be able to evict it and make them stale.
+                is_disposable=False,
             )
             subscriber_repository.create(session, subscriber)
         else:
@@ -50,6 +53,7 @@ def seed() -> str:
             subscriber.plan_name = "ScaleSage Pro"
             subscriber.status = "active"
 
+        subscriber.is_disposable = False
         subscriber.stripe_customer_id = "cus_demo_seeded"
         subscriber.stripe_subscription_id = "sub_demo_seeded"
         subscriber.current_period_end = period_end

@@ -29,7 +29,7 @@ from app.services import stripe_client
 
 # The seeded row carries deliberately fake Stripe ids so nobody mistakes it for webhook
 # evidence. They must never be sent to Stripe.
-SEEDED_IDS = {"sub_demo_seeded", "cus_demo_seeded"}
+SEEDED_IDS = {"sub_demo_seeded", "cus_demo_seeded", "sub_demo_generated", "cus_demo_generated"}
 
 
 def _plan(session) -> tuple[list[Subscriber], list[str], list[str]]:

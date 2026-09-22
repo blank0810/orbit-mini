@@ -20,3 +20,9 @@ export interface Plan {
 export interface ApiError {
   detail: string;
 }
+
+export interface DemoAccount {
+  email: string;
+  password: string;
+  full_name: string;
+}

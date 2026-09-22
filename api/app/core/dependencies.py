@@ -1,12 +1,13 @@
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, HTTPException, Request, Response
 
 from app.core.config import get_settings
 from app.db.session import DbSession
 from app.models.subscriber_model import Subscriber
 from app.repositories import subscriber_repository
-from app.services.auth_service import decode_access_token
+from app.services.auth_service import create_access_token, decode_access_token
 
 
 def get_current_subscriber(request: Request, session: DbSession) -> Subscriber:
@@ -23,3 +24,19 @@ def get_current_subscriber(request: Request, session: DbSession) -> Subscriber:
 
 
 CurrentSubscriber = Annotated[Subscriber, Depends(get_current_subscriber)]
+
+
+def set_session_cookie(response: Response, subscriber_id: UUID) -> None:
+    """Write the session cookie. Lives beside the reader so both agree on every flag."""
+    settings = get_settings()
+    # SameSite must be lax, not strict: Stripe Checkout returns via a cross-site top-level
+    # navigation. Strict would drop the cookie and silently log the user out mid-purchase.
+    response.set_cookie(
+        key=settings.cookie_name,
+        value=create_access_token(subscriber_id),
+        httponly=True,
+        secure=settings.cookie_secure,
+        samesite="lax",
+        max_age=settings.jwt_expire_minutes * 60,
+        path="/",
+    )

@@ -1,9 +1,7 @@
-from uuid import UUID
-
 from fastapi import APIRouter, HTTPException, Response
 
 from app.core.config import get_settings
-from app.core.dependencies import CurrentSubscriber
+from app.core.dependencies import CurrentSubscriber, set_session_cookie
 from app.db.session import DbSession
 from app.models.subscriber_model import Subscriber
 from app.schemas.auth_schema import LoginRequest, RegisterRequest
@@ -11,21 +9,6 @@ from app.schemas.subscriber_schema import SubscriberRead
 from app.services import auth_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-
-def _set_session_cookie(response: Response, subscriber_id: UUID) -> None:
-    settings = get_settings()
-    # SameSite must be lax, not strict: Stripe Checkout returns via a cross-site top-level
-    # navigation. Strict would drop the cookie and silently log the user out mid-purchase.
-    response.set_cookie(
-        key=settings.cookie_name,
-        value=auth_service.create_access_token(subscriber_id),
-        httponly=True,
-        secure=settings.cookie_secure,
-        samesite="lax",
-        max_age=settings.jwt_expire_minutes * 60,
-        path="/",
-    )
 
 
 @router.post("/register", status_code=201, response_model=SubscriberRead)
@@ -43,7 +26,7 @@ def register(data: RegisterRequest, response: Response, session: DbSession) -> S
         # Reported as a gap rather than silently traded away. AGENTS.md section 12.
         raise HTTPException(status_code=409, detail="That email is already registered") from None
     session.commit()
-    _set_session_cookie(response, subscriber.id)
+    set_session_cookie(response, subscriber.id)
     return subscriber
 
 
@@ -52,7 +35,7 @@ def login(data: LoginRequest, response: Response, session: DbSession) -> Subscri
     subscriber = auth_service.authenticate(session, str(data.email), data.password)
     if subscriber is None:
         raise HTTPException(status_code=401, detail="Incorrect email or password")
-    _set_session_cookie(response, subscriber.id)
+    set_session_cookie(response, subscriber.id)
     return subscriber
 
 

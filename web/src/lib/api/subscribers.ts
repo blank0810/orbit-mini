@@ -1,4 +1,4 @@
-import type { Subscriber } from "@/lib/types";
+import type { DemoAccount, Subscriber } from "@/lib/types";
 import { api } from "./client";
 
 export async function getMe(): Promise<Subscriber> {
@@ -29,4 +29,10 @@ export async function login(
 
 export async function logout(): Promise<void> {
   return api<void>("/auth/logout", { method: "POST" });
+}
+
+// Creates a throwaway demo account and signs you into it. The API sets the session cookie
+// on this response, so no follow-up login call is needed.
+export async function generateDemoAccount(): Promise<DemoAccount> {
+  return api<DemoAccount>("/demo/generate", { method: "POST" });
 }
