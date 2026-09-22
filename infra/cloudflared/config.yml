@@ -10,6 +10,18 @@
 tunnel: 2309621f-ce85-4890-ac89-b38d2250358f
 credentials-file: /etc/cloudflared/2309621f-ce85-4890-ac89-b38d2250358f.json
 
+# HTTP/2 rather than the default QUIC, because this residential line loses packets
+# (~7% to 1.1.1.1) and QUIC rides UDP. On QUIC the tunnel re-registered seven times in a
+# single day and logged six `Failed to refresh DNS local resolver` timeouts. TCP recovers
+# from loss on its own; UDP hands that problem to the application.
+#
+# Measuring this from the host itself is misleading and cost an hour: a request from this
+# machine to the public hostname leaves for the Cloudflare edge and comes back down the
+# tunnel to the same machine, crossing the same lossy link twice. That reads as a ~40%
+# failure rate while an external fetch of the same URL succeeds 6/6. Test reachability
+# from somewhere else, never from the box running cloudflared.
+protocol: http2
+
 # Targets are compose service names on the internal network, not host ports. cloudflared
 # runs inside the same network, so it never touches 7301/7302 at all.
 ingress:
