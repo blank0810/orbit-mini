@@ -33,11 +33,15 @@ API_ROOT = Path(__file__).resolve().parent.parent
 def _database_url_from_env_files() -> str | None:
     """Read DATABASE_URL out of whichever env file the stack is actually running with.
 
-    Checked in deployment order: .env.prod wins because deploying switches the database to
-    its password, at which point the development .env no longer opens it. Without this the
-    suite fails on a password mismatch that has nothing to do with any test.
+    Development first, and each file is paired with the port ITS stack publishes. Both
+    files say `@db:5432` because both are read inside their own container; from the host
+    they are different servers, and the credentials are not interchangeable.
+
+    The suite creates and drops `orbit_test`, so it runs against development and nothing
+    else. Reading .env.prod first -- which this did while there was only one stack -- aimed
+    production's password at development's port and failed every test on authentication.
     """
-    for name in (".env.prod", ".env"):
+    for name, host_port in ((".env", "localhost:7303"), (".env.prod", "localhost:7313")):
         candidate = API_ROOT.parent / name
         if not candidate.exists():
             continue
@@ -45,7 +49,7 @@ def _database_url_from_env_files() -> str | None:
             if line.startswith("DATABASE_URL="):
                 # The app runs in Docker where the host is the `db` service. From the test
                 # runner on the host it is the published loopback port instead.
-                return line.split("=", 1)[1].strip().replace("@db:5432", "@localhost:7303")
+                return line.split("=", 1)[1].strip().replace("@db:5432", f"@{host_port}")
     return None
 
 
