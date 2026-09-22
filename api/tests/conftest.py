@@ -151,7 +151,13 @@ def stub_stripe(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
     construct_event is NOT stubbed: signature verification is the thing under test, so it
     runs for real against TEST_WEBHOOK_SECRET.
     """
-    calls: dict[str, Any] = {"checkout": [], "price": [], "subscription": []}
+    calls: dict[str, Any] = {
+        "checkout": [],
+        "price": [],
+        "subscription": [],
+        "change": [],
+        "cancel": [],
+    }
 
     def fake_checkout(**kwargs: Any) -> FakeCheckoutSession:
         calls["checkout"].append(kwargs)
@@ -169,6 +175,16 @@ def stub_stripe(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
             "current_period_end": int(time.time()) + 2_592_000,
         }
 
+    def fake_change(subscription_id: str, new_price_id: str) -> dict[str, Any]:
+        calls["change"].append((subscription_id, new_price_id))
+        return {"id": subscription_id, "status": "active"}
+
+    def fake_cancel(subscription_id: str, *, cancel: bool) -> dict[str, Any]:
+        calls["cancel"].append((subscription_id, cancel))
+        return {"id": subscription_id, "status": "active", "cancel_at_period_end": cancel}
+
+    monkeypatch.setattr(stripe_client, "change_subscription_price", fake_change)
+    monkeypatch.setattr(stripe_client, "set_cancel_at_period_end", fake_cancel)
     monkeypatch.setattr(stripe_client, "create_checkout_session", fake_checkout)
     monkeypatch.setattr(stripe_client, "resolve_price_id", fake_price)
     monkeypatch.setattr(stripe_client, "retrieve_subscription", fake_subscription)

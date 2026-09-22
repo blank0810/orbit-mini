@@ -8,6 +8,7 @@ export interface Subscriber {
   plan_name: string;
   status: SubscriberStatus;
   current_period_end: string | null;
+  cancel_at_period_end: boolean;
   full_name: string;
 }
 

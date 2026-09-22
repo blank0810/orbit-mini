@@ -183,6 +183,26 @@ def change_subscription_price(subscription_id: str, new_price_id: str) -> dict[s
     return dict(updated.to_dict())
 
 
+def set_cancel_at_period_end(subscription_id: str, *, cancel: bool) -> dict[str, Any]:
+    """Schedule a cancellation for the end of the paid period, or call one off.
+
+    Deliberately NOT an immediate cancellation. The customer has paid through the end of
+    the current period, so taking access away the moment they click is taking something
+    they already bought. Stripe keeps the subscription active until the period lapses and
+    then sends customer.subscription.deleted.
+
+    Reversible on purpose: passing cancel=False before the period ends resumes the
+    subscription with no gap and no new checkout.
+    """
+    try:
+        updated = stripe.Subscription.modify(
+            subscription_id, cancel_at_period_end=cancel, api_key=_require_key()
+        )
+    except stripe.InvalidRequestError:
+        raise SubscriptionNotFound(f"No such subscription: {subscription_id}") from None
+    return dict(updated.to_dict())
+
+
 def cancel_subscription(subscription_id: str) -> str:
     """Cancel a subscription immediately. Returns its resulting status.
 

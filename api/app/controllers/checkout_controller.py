@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.core.dependencies import CurrentSubscriber
 from app.db.session import DbSession
+from app.models.subscriber_model import Subscriber
 from app.schemas.checkout_schema import (
     ChangePlanRequest,
     ChangePlanResponse,
@@ -9,6 +10,7 @@ from app.schemas.checkout_schema import (
     CheckoutResponse,
     PlanRead,
 )
+from app.schemas.subscriber_schema import SubscriberRead
 from app.services import plan_catalogue, stripe_client, subscription_service
 
 router = APIRouter(tags=["checkout"])
@@ -59,6 +61,40 @@ def change_plan(
         raise HTTPException(status_code=503, detail="Payments are not configured") from None
     session.commit()
     return ChangePlanResponse(plan_name=plan_name)
+
+
+@router.post("/subscription/cancel", status_code=200, response_model=SubscriberRead)
+def cancel_subscription(session: DbSession, subscriber: CurrentSubscriber) -> Subscriber:
+    """Schedule cancellation for the end of the period already paid for."""
+    try:
+        subscription_service.cancel(session, subscriber)
+    except subscription_service.NotCancellable:
+        raise HTTPException(
+            status_code=409, detail="You do not have a subscription to cancel"
+        ) from None
+    except stripe_client.SubscriptionNotFound:
+        raise HTTPException(status_code=409, detail="This subscription cannot be changed") from None
+    except stripe_client.StripeNotConfigured:
+        raise HTTPException(status_code=503, detail="Payments are not configured") from None
+    session.commit()
+    return subscriber
+
+
+@router.post("/subscription/resume", status_code=200, response_model=SubscriberRead)
+def resume_subscription(session: DbSession, subscriber: CurrentSubscriber) -> Subscriber:
+    """Call off a scheduled cancellation while the period is still running."""
+    try:
+        subscription_service.resume(session, subscriber)
+    except subscription_service.NotCancellable:
+        raise HTTPException(
+            status_code=409, detail="You do not have a subscription to resume"
+        ) from None
+    except stripe_client.SubscriptionNotFound:
+        raise HTTPException(status_code=409, detail="This subscription cannot be changed") from None
+    except stripe_client.StripeNotConfigured:
+        raise HTTPException(status_code=503, detail="Payments are not configured") from None
+    session.commit()
+    return subscriber
 
 
 @router.get("/plans", response_model=list[PlanRead])

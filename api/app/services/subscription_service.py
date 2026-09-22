@@ -18,6 +18,10 @@ class AlreadyOnPlan(Exception):
     """Raised when the requested plan is the one already held."""
 
 
+class NotCancellable(Exception):
+    """Raised when there is no live subscription to cancel or resume."""
+
+
 def start_checkout(session: Session, subscriber: Subscriber, plan_key: str) -> str:
     plan = plan_catalogue.get_plan(plan_key)
     # A second Checkout for an active subscriber would create a second Stripe
@@ -69,3 +73,25 @@ def change_plan(session: Session, subscriber: Subscriber, plan_key: str) -> str:
     subscriber.plan_name = plan.display_name
     subscriber_repository.save(session, subscriber)
     return plan.display_name
+
+
+def _live_subscription_id(subscriber: Subscriber) -> str:
+    if subscriber.status not in ("active", "past_due") or not subscriber.stripe_subscription_id:
+        raise NotCancellable
+    return subscriber.stripe_subscription_id
+
+
+def cancel(session: Session, subscriber: Subscriber) -> None:
+    """Schedule cancellation at the end of the paid period."""
+    stripe_client.set_cancel_at_period_end(_live_subscription_id(subscriber), cancel=True)
+    # Status deliberately unchanged: Stripe keeps it active until the period lapses, and
+    # this row mirrors Stripe rather than running ahead of it.
+    subscriber.cancel_at_period_end = True
+    subscriber_repository.save(session, subscriber)
+
+
+def resume(session: Session, subscriber: Subscriber) -> None:
+    """Call off a scheduled cancellation, while the period is still running."""
+    stripe_client.set_cancel_at_period_end(_live_subscription_id(subscriber), cancel=False)
+    subscriber.cancel_at_period_end = False
+    subscriber_repository.save(session, subscriber)

@@ -281,6 +281,25 @@ httpOnly cookie**. No session storage, no second table, R6 intact.
 
 ---
 
+### Also added: subscription management
+
+Switching plans in either direction, and cancelling. Neither is in the brief, which asks
+only that someone signs up and sees their plan and status.
+
+**Why.** A client dashboard whose only verb is "buy" is a checkout page. The role is
+maintaining ScaleSage's Orbit, where customers move between Starter and Pro and leave.
+
+**Two decisions worth keeping.** Switching repoints the existing Stripe subscription rather
+than opening a new one; checking out again would bill the customer twice. Cancelling is
+scheduled for the end of the paid period rather than taken immediately, because the
+customer bought the rest of this month, and it stays reversible until that date.
+
+**What it cost.** Roughly an hour and a half, plus a column. `cancel_at_period_end` exists
+because status alone cannot tell "renews on the 21st" from "ends on the 21st", and a
+dashboard that promises a renewal which is not coming is worse than one that says nothing.
+
+---
+
 ## 12. Honesty rules
 
 The deliverable includes a written report naming **hours spent and anything unfinished**.

@@ -56,6 +56,7 @@ def _apply_subscription_period(subscriber: Subscriber, subscription_id: str) -> 
     mapped = STRIPE_STATUS_MAP.get(str(subscription.get("status", "")))
     if mapped is not None:
         subscriber.status = mapped
+    subscriber.cancel_at_period_end = bool(subscription.get("cancel_at_period_end", False))
 
 
 def apply_event(session: Session, event: dict[str, Any]) -> str:
@@ -114,6 +115,9 @@ def apply_event(session: Session, event: dict[str, Any]) -> str:
         if subscription_id:
             _apply_subscription_period(subscriber, subscription_id)
     elif event_type in ("customer.subscription.created", "customer.subscription.updated"):
+        # Stripe owns this flag. A cancellation scheduled or called off anywhere - our UI,
+        # the Stripe dashboard, a dunning rule - arrives here.
+        subscriber.cancel_at_period_end = bool(data.get("cancel_at_period_end", False))
         status = STRIPE_STATUS_MAP.get(data["status"])
         if status is not None:
             subscriber.status = status
@@ -122,6 +126,8 @@ def apply_event(session: Session, event: dict[str, Any]) -> str:
             subscriber.stripe_subscription_id = data["id"]
     elif event_type == "customer.subscription.deleted":
         subscriber.status = "canceled"
+        # The scheduled cancellation has now happened; the flag has nothing left to say.
+        subscriber.cancel_at_period_end = False
         period_end = _period_end(data)
         if period_end is not None:
             subscriber.current_period_end = period_end

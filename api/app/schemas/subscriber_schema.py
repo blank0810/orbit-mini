@@ -15,6 +15,7 @@ class SubscriberRead(BaseModel):
     plan_name: str
     status: str
     current_period_end: datetime | None
+    cancel_at_period_end: bool
 
     @computed_field
     @property

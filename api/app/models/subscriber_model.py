@@ -34,6 +34,10 @@ class Subscriber(Base):
     # happened to register a demo-looking address must never be evicted by a convention.
     # The advertised demo account is deliberately NOT flagged and so can never be evicted.
     is_disposable: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # Stripe keeps a cancelled subscription ACTIVE until the paid period runs out, so
+    # status alone cannot tell "renews on the 21st" from "ends on the 21st". Without this
+    # the dashboard would promise a renewal that is not coming.
+    cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     # Idempotency guard: the last Stripe event applied to this row rejects a replayed delivery.
     last_stripe_event_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
