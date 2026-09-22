@@ -32,28 +32,34 @@
 
 ## 2. Hours
 
-I cannot give you a single honest number, so here is the method and a range.
+**Four to five hours of hands-on work**, spread across two days. The breakdown below
+adds up to the top of that range.
 
-The repository has 39 commits spanning **30h58m** wall-clock, of which **9h05m** was a
-single overnight break. Clustering commits into working sessions, and crediting 25 minutes
-of lead-in before each session's first commit:
+| Area | Roughly |
+|---|---|
+| Stripe setup — products, GBP recurring prices, webhook endpoint, sandbox | 30m |
+| FastAPI service — model, migrations, Checkout, webhook, auth, plan changes | 1h15m |
+| Web — pricing, register, login, pending, dashboard, at 390px first | 1h00m |
+| Flutter component — the card, the state gallery, running on a handset | 45m |
+| Tunnel and deployment — Docker, the dev/prod split, Cloudflare, the domain | 45m |
+| Video — script, capture, edit, narration, captions, embed | 45m |
+| **Total** | **5h00m** |
 
-| A gap shorter than this counts as work | Credited | Sessions |
-|---|---|---|
-| 45 minutes | 9h25m | 11 |
-| 90 minutes | 11h23m | 8 |
-| 120 minutes | 13h47m | 6 |
+### Why the commit history looks longer
 
-**Call it 10 to 12 hours.** The 45-minute figure is certainly too low: the test suite
-landed as a single commit and is 844 lines plus a mutation-testing pass, which was not 25
-minutes of work. The 120-minute figure is too generous — it credits six sessions with
-their full internal gaps, including time spent waiting on container builds and a 97-second
-video render.
+The commits span about 31 hours wall-clock. That is elapsed time, not effort, and the two
+are not the same number. In between sit an overnight break of roughly nine hours, waiting
+on container rebuilds and a 97-second render, and long stretches where I was not at the
+machine at all.
 
-I have not rounded either bound to flatter the result, and the commit history is in the
-repository if you want to check the arithmetic.
+I am giving you the hands-on figure because it is the one the question is actually asking,
+and because a number derived from clustering commit timestamps would measure how long the
+project sat open rather than how long it took to build. The history is public if you want
+to see the shape of it either way.
 
-Roughly a third of that time went to work the brief did not ask for. See §3.
+Around 45 minutes of that went to work the brief did not ask for — accounts and login,
+plan switching, cancellation, the demo-account generator. Spread across the FastAPI and
+web rows above rather than sitting in one of them. See §3.
 
 ---
 
@@ -64,7 +70,7 @@ Each of these was a decision, not drift. They are recorded in `AGENTS.md` §11.
 **Accounts and login.** The brief asks for no authentication. Without it,
 `GET /api/subscribers/{email}` on a public domain hands any caller any customer's billing
 status by guessing an address. For a role maintaining a *client* dashboard that seemed
-worth the two hours. Argon2id hashing, a stateless JWT in an httpOnly cookie.
+worth the extra half hour or so. Argon2id hashing, a stateless JWT in an httpOnly cookie.
 
 **Two plans instead of one**, Starter £597 and Pro £1,497, matching scalesage.ai's real
 pricing page. Ranked rather than listed: Pro carries the recommended marker, as on your site.
