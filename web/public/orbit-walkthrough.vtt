@@ -5,103 +5,110 @@ Captions for the Orbit Mini walkthrough. Cue text is the narration verbatim; tim
 come from the measured length of each rendered line.
 
 NOTE
-Every cue carries `line:68%`. The video has its own captions burned into the bottom
-edge of the frame, and the default cue position is that same bottom edge -- left alone,
-the two sets of text land on top of each other. 68% seats the narration above the band
-with room for a two-line cue.
+Every cue carries `line:-2`. The video burns its own scene titles into the bottom of the
+frame, at roughly 93% of frame height, and the default cue position is that same edge --
+left alone the two sets of text land on top of each other.
+
+-2 counts LINES UP FROM THE BOTTOM, so the box is anchored to its own LAST line and a cue
+that wraps grows upward rather than down into the titles. Measured in Chrome, it seats the
+cue at about 86% of frame height: clear of the titles, still in the lower third.
+
+Do not switch this to a percentage. A percentage anchors the TOP of the box, so a wrapped
+cue extends downward into the titles -- and the first attempt, line:68%, also parked every
+caption in the dead centre of the picture.
 
 1
-00:00:00.600 --> 00:00:01.350 line:68% align:center
+00:00:00.600 --> 00:00:01.350 line:-2 align:center
 Orbit Mini.
 
 2
-00:00:01.350 --> 00:00:04.826 line:68% align:center
+00:00:01.350 --> 00:00:04.826 line:-2 align:center
 A working slice of a client subscription dashboard.
 
 3
-00:00:05.600 --> 00:00:08.328 line:68% align:center
+00:00:05.600 --> 00:00:08.328 line:-2 align:center
 It opens on ScaleSage's own pricing.
 
 4
-00:00:08.328 --> 00:00:10.981 line:68% align:center
+00:00:08.328 --> 00:00:10.981 line:-2 align:center
 Two plans, not a comparison matrix.
 
 5
-00:00:10.981 --> 00:00:15.074 line:68% align:center
+00:00:10.981 --> 00:00:15.074 line:-2 align:center
 Pro is marked recommended, so the choice is yes or no.
 
 6
-00:00:16.600 --> 00:00:18.570 line:68% align:center
+00:00:16.600 --> 00:00:18.570 line:-2 align:center
 Signing up takes four fields.
 
 7
-00:00:18.570 --> 00:00:23.325 line:68% align:center
+00:00:18.570 --> 00:00:23.325 line:-2 align:center
 The password rule is stated up front, rather than revealed on failure.
 
 8
-00:00:23.325 --> 00:00:25.702 line:68% align:center
+00:00:23.325 --> 00:00:25.702 line:-2 align:center
 Submitting goes straight to Stripe.
 
 9
-00:00:28.400 --> 00:00:30.341 line:68% align:center
+00:00:28.400 --> 00:00:30.341 line:-2 align:center
 Checkout is Stripe hosted.
 
 10
-00:00:30.341 --> 00:00:35.941 line:68% align:center
+00:00:30.341 --> 00:00:35.941 line:-2 align:center
 No card details ever touch this system, so there is no card data to defend.
 
 11
-00:00:35.941 --> 00:00:37.659 line:68% align:center
+00:00:35.941 --> 00:00:37.659 line:-2 align:center
 Note the sandbox badge.
 
 12
-00:00:37.659 --> 00:00:39.824 line:68% align:center
+00:00:37.659 --> 00:00:39.824 line:-2 align:center
 This is test mode throughout.
 
 13
-00:00:40.600 --> 00:00:41.570 line:68% align:center
+00:00:40.600 --> 00:00:41.570 line:-2 align:center
 Then it waits.
 
 14
-00:00:41.570 --> 00:00:49.052 line:68% align:center
+00:00:41.570 --> 00:00:49.052 line:-2 align:center
 Payment succeeding and the webhook landing are different moments, so this screen polls rather than assuming.
 
 15
-00:00:50.600 --> 00:00:53.180 line:68% align:center
+00:00:50.600 --> 00:00:53.180 line:-2 align:center
 Here is what the brief asked for.
 
 16
-00:00:53.180 --> 00:00:57.012 line:68% align:center
+00:00:53.180 --> 00:00:57.012 line:-2 align:center
 One page: the plan, the status, the renewal date.
 
 17
-00:00:57.012 --> 00:01:01.235 line:68% align:center
+00:00:57.012 --> 00:01:01.235 line:-2 align:center
 Status carries an icon and a word, never colour alone.
 
 18
-00:01:02.600 --> 00:01:05.316 line:68% align:center
+00:01:02.600 --> 00:01:05.316 line:-2 align:center
 Plans switch either direction, prorated.
 
 19
-00:01:05.316 --> 00:01:09.798 line:68% align:center
+00:01:05.316 --> 00:01:09.798 line:-2 align:center
 Cancelling waits until the end of the period you already paid for.
 
 20
-00:01:10.600 --> 00:01:15.012 line:68% align:center
+00:01:10.600 --> 00:01:15.012 line:-2 align:center
 And it was built for a phone first, at three hundred and ninety pixels.
 
 21
-00:01:17.500 --> 00:01:22.942 line:68% align:center
+00:01:17.500 --> 00:01:22.942 line:-2 align:center
 A Flutter component, on a real phone, calling the same API as the web dashboard.
 
 22
-00:01:22.942 --> 00:01:25.255 line:68% align:center
+00:01:22.942 --> 00:01:25.255 line:-2 align:center
 Every state reviewable on its own.
 
 23
-00:01:28.600 --> 00:01:34.680 line:68% align:center
+00:01:28.600 --> 00:01:34.680 line:-2 align:center
 FastAPI, Postgres, Next.js, Flutter, Docker, and a Cloudflare Tunnel.
 
 24
-00:01:34.680 --> 00:01:35.473 line:68% align:center
+00:01:34.680 --> 00:01:35.473 line:-2 align:center
 Live now.

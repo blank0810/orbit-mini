@@ -61,9 +61,10 @@ export function WalkthroughVideo() {
               preload="auto"
               className="absolute inset-0 size-full bg-bg"
             >
-              {/* On by default. The cue file seats every cue at line:68% so it clears
-                  the captions burned into the bottom of the frame; left at the default
-                  position the two sets of text render on top of each other. */}
+              {/* On by default. The cue file anchors every cue at line:-2, which seats
+                  it just above the scene titles burned into the bottom of the frame
+                  rather than on top of them -- or, as a first attempt did, in the middle
+                  of the picture. Reasoning is in the NOTE block of the .vtt. */}
               <track
                 kind="captions"
                 src={CAPTIONS}
