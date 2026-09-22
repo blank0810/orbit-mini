@@ -16,8 +16,20 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["ruff"]
+dev = [
+    "ruff",
+    "pytest",
+    # starlette's TestClient transport. This starlette wants httpx2, not httpx.
+    "httpx2",
+]
 
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# `app` lives at the project root, not on the default path.
+pythonpath = ["."]
+# Quiet by default; -v when a failure needs reading.
+addopts = "-q"

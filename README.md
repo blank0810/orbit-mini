@@ -36,6 +36,36 @@ docker compose -f infra/docker-compose.yml up --build
 | Readiness (database `SELECT 1`) | http://localhost:7302/api/health/ready |
 | pgAdmin (development tool) | http://localhost:7304 |
 
+
+## Tests
+
+```bash
+cd api && uv run pytest
+```
+
+35 tests, no network and no Stripe keys. The suite needs a running Postgres, which
+`docker compose` already provides; it creates and migrates a separate `orbit_test`
+database so live data is never touched, and every test runs in a transaction that rolls
+back.
+
+It covers the four cases the brief requires:
+
+| | |
+|---|---|
+| Sign-up creates **exactly one** subscriber and returns a Checkout URL | `test_signup.py` |
+| A valid webhook signature marks the subscriber active | `test_webhook.py` |
+| An invalid signature is rejected **and writes nothing** | `test_webhook.py` |
+| A replayed event leaves one row, unchanged | `test_webhook.py` |
+
+Two of those cannot be produced by hand at any price. Stripe will never send a
+badly-signed payload, and it cannot be told to redeliver on demand, so forging both is the
+only way that code ever runs.
+
+Stripe is stubbed at a single point. `app/services/stripe_client.py` is the only module in
+the codebase that imports `stripe`, which is what makes the suite offline and the
+forged-signature test possible. Signature verification itself is **not** stubbed: it is the
+thing under test.
+
 ## Development tools
 
 pgAdmin is a development convenience for inspecting the database, bound to
