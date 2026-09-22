@@ -1,0 +1,22 @@
+name: orbit_status_card
+description: A subscription status card for the ScaleSage Orbit mobile app. Reads the same Orbit Mini API the web dashboard reads.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+  flutter: ">=3.38.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # The only dependency. A session here is an httpOnly cookie, so the client has to carry
+  # one header; that does not justify pulling in a whole networking framework.
+  http: ^1.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:

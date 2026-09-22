@@ -46,3 +46,12 @@ media/output/
 eli5/
 docs/brief.md
 backups/
+
+# Generated video assets
+brag-output*/
+
+# Flutter
+mobile/**/build/
+mobile/**/.dart_tool/
+mobile/**/.idea/
+mobile/**/*.iml
