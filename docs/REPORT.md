@@ -34,19 +34,21 @@
 
 I cannot give you a single honest number, so here is the method and a range.
 
-The repository has 30 commits spanning **25h17m** wall-clock, of which about **9h** was an
-overnight break. Clustering commits into working sessions, and crediting 25 minutes of
-lead-in before each session's first commit:
+The repository has 39 commits spanning **30h58m** wall-clock, of which **9h05m** was a
+single overnight break. Clustering commits into working sessions, and crediting 25 minutes
+of lead-in before each session's first commit:
 
-| A gap shorter than this counts as work | Credited |
-|---|---|
-| 45 minutes | 7h15m |
-| 90 minutes | 8h35m |
-| 120 minutes | 9h46m |
+| A gap shorter than this counts as work | Credited | Sessions |
+|---|---|---|
+| 45 minutes | 9h25m | 11 |
+| 90 minutes | 11h23m | 8 |
+| 120 minutes | 13h47m | 6 |
 
-**Call it 8 to 10 hours.** The 45-minute figure is certainly too low: the test suite landed
-as a single commit and is 844 lines plus a mutation-testing pass, which was not 25 minutes
-of work. The 120-minute figure is probably too generous.
+**Call it 10 to 12 hours.** The 45-minute figure is certainly too low: the test suite
+landed as a single commit and is 844 lines plus a mutation-testing pass, which was not 25
+minutes of work. The 120-minute figure is too generous — it credits six sessions with
+their full internal gaps, including time spent waiting on container builds and a 97-second
+video render.
 
 I have not rounded either bound to flatter the result, and the commit history is in the
 repository if you want to check the arithmetic.
@@ -143,7 +145,7 @@ been switched between plans.
 
 ---
 
-## 6. Two bugs worth telling you about
+## 6. Three bugs worth telling you about
 
 Both were invisible to code review and both were found only by running the thing.
 
@@ -157,7 +159,27 @@ status to active and left `current_period_end` NULL, so the dashboard showed "Ac
 a blank renewal date after a real payment. The subscription object holds the period, not
 the session. Found when the operator made a real payment and looked at the result.
 
-Both now have regression tests.
+**A Subscription is not a mapping either — the same root cause, found on submission day.**
+Switching plans returned 500. `change_subscription_price` probed the retrieved
+subscription with `.get("items", {})`, and a `Subscription`, like an `Event`, defines
+`__getitem__` but not `.get()`, so it raised `AttributeError` rather than returning the
+default. It failed on the one endpoint that moves a customer's money.
+
+That it is the *same* mistake twice is the part worth reporting. The cause was a gap in
+how the suite is built: every test stubs `stripe_client`'s **functions**, which is what
+keeps the suite offline, but it also means the module's own body never executes. Both bugs
+lived in that body.
+
+`tests/test_stripe_client.py` now stubs one level lower — at `stripe.Subscription.retrieve`
+and `.modify` — and returns real `StripeObject` instances built with `construct_from`,
+which is a local constructor and makes no network call. Stubbing with plain dicts there
+would have kept the suite green while production kept failing, which is exactly how this
+shipped in the first place.
+
+All three now have regression tests. I verified this one against the live test-mode
+subscription rather than trusting the fix: the old expression still raises on a real
+`Subscription`, the new one reads the item, and a full Pro → Starter → Pro round trip
+leaves our row and Stripe in agreement.
 
 ---
 
