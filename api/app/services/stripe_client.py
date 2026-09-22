@@ -167,7 +167,14 @@ def change_subscription_price(subscription_id: str, new_price_id: str) -> dict[s
     """
     api_key = _require_key()
     try:
-        subscription = stripe.Subscription.retrieve(subscription_id, api_key=api_key)
+        # A Subscription is NOT a mapping in stripe-python 15.x. It defines __getitem__
+        # but not .get(), so probing it dict-style raises AttributeError rather than
+        # returning the default -- a 500 on the one path that moves someone's money.
+        # to_dict() hands back a plain dict and keeps Stripe types out of the logic, the
+        # same way retrieve_subscription() does.
+        subscription = dict(
+            stripe.Subscription.retrieve(subscription_id, api_key=api_key).to_dict()
+        )
         items = subscription.get("items", {}).get("data", [])
         if not items:
             raise SubscriptionNotFound(f"{subscription_id} has no billable items")
