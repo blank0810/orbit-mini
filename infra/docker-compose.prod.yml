@@ -9,15 +9,22 @@
 # which is why nothing here publishes on 0.0.0.0. pgAdmin keeps running but the tunnel's
 # ingress rules never route to it, so it stays unreachable from the internet.
 
+# A SEPARATE stack: its own containers, own network, own volume, own database. Changes
+# are built and checked on orbit-dev first; nothing here moves until it is deployed.
+name: orbit-prod
+
 services:
   db:
     env_file: ../.env.prod
+    ports: !override ["127.0.0.1:7313:5432"]
 
   api:
     env_file: ../.env.prod
+    ports: !override ["127.0.0.1:7312:8000"]
 
   web:
     env_file: ../.env.prod
+    ports: !override ["127.0.0.1:7311:3000"]
     build:
       context: ../web
       dockerfile: Dockerfile
@@ -26,6 +33,7 @@ services:
 
   pgadmin:
     env_file: ../.env.prod
+    ports: !override ["127.0.0.1:7314:80"]
 
   # Present ONLY in the production overlay. The base compose file has no tunnel, so a
   # local `docker compose up` cannot expose the machine to the internet by accident.

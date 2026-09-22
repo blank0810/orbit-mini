@@ -1,3 +1,8 @@
+# Development stack. Named explicitly so it gets its own containers, network and
+# volume, and cannot be confused with production. Without a name Compose derives one
+# from this directory, which meant dev and prod were the SAME stack sharing ONE database.
+name: orbit-dev
+
 services:
   db:
     image: postgres:16-alpine
