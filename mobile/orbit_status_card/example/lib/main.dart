@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:orbit_status_card/orbit_status_card.dart';
 
+import 'gallery.dart';
+
 /// A host app whose only job is to show the card against the real API.
 ///
 /// The package is the deliverable; this exists so it can be run and recorded.
@@ -24,7 +26,7 @@ class OrbitExampleApp extends StatelessWidget {
         scaffoldBackgroundColor: OrbitTheme.background,
         fontFamily: 'sans-serif',
       ),
-      home: const _Home(),
+      home: const _Shell(),
     );
   }
 }
@@ -80,9 +82,8 @@ class _HomeState extends State<_Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
+    return SafeArea(
+      child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 460),
             child: Padding(
@@ -153,6 +154,51 @@ class _HomeState extends State<_Home> {
               ),
             ),
           ),
+        ),
+    );
+  }
+}
+
+/// Two tabs, because they answer different questions.
+///
+/// Gallery reviews the WIDGET: every state, no server, nothing to set up. Live proves the
+/// same widget against the real API. The requirement is the component, so the gallery is
+/// the default.
+class _Shell extends StatefulWidget {
+  const _Shell();
+  @override
+  State<_Shell> createState() => _ShellState();
+}
+
+class _ShellState extends State<_Shell> {
+  int _index = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: OrbitTheme.background,
+      body: _index == 0 ? const GalleryPage() : const _Home(),
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: OrbitTheme.border)),
+        ),
+        child: NavigationBar(
+          backgroundColor: OrbitTheme.background,
+          indicatorColor: OrbitTheme.accent.withValues(alpha: 0.18),
+          selectedIndex: _index,
+          onDestinationSelected: (i) => setState(() => _index = i),
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.grid_view_rounded, color: OrbitTheme.textMuted),
+              selectedIcon: Icon(Icons.grid_view_rounded, color: OrbitTheme.accent),
+              label: 'Gallery',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.cloud_outlined, color: OrbitTheme.textMuted),
+              selectedIcon: Icon(Icons.cloud_done_rounded, color: OrbitTheme.accent),
+              label: 'Live',
+            ),
+          ],
         ),
       ),
     );
