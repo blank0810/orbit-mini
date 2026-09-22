@@ -13,6 +13,7 @@ PUBLIC := https://orbit.ehnand.com
 
 .DEFAULT_GOAL := help
 .PHONY: help test lint dev dev-down dev-logs dev-migrate dev-seed \
+        flutter-test flutter-demo flutter-stop \
         deploy prod-up prod-migrate prod-logs prod-down verify backup reset-demo
 
 help: ## Show this help
@@ -77,3 +78,32 @@ backup: ## Dump the production database to backups/ before anything risky
 
 reset-demo: ## Wipe demo data in production and re-seed the advertised account
 	$(PROD) exec -T api python -m app.reset_demo --yes
+
+# --- the Flutter component -------------------------------------------------------
+
+FLUTTER_PKG := mobile/orbit_status_card
+FLUTTER_PORT := 7390
+
+flutter-test: ## Run the Flutter package tests (no server needed)
+	cd $(FLUTTER_PKG) && flutter test
+
+flutter-demo: ## Build and serve the Flutter card against the DEV api, then open it
+	@echo "  the demo calls the dev API on 7302, so bring it up first if it is not running"
+	cd $(FLUTTER_PKG)/example && flutter build web --release \
+		--dart-define=ORBIT_API_BASE_URL=http://localhost:7302
+	@# Flutter web ships a service worker that will happily serve a stale bundle after a
+	@# rebuild. Deleting it here saves the "my change did nothing" hour.
+	@rm -f $(FLUTTER_PKG)/example/build/web/flutter_service_worker.js
+	@pid=$$(ss -ltnpH 2>/dev/null | grep ':$(FLUTTER_PORT) ' | grep -oP 'pid=\K[0-9]+' | head -1); \
+		[ -n "$$pid" ] && kill $$pid 2>/dev/null || true
+	@cd $(FLUTTER_PKG)/example/build/web && nohup python3 -m http.server $(FLUTTER_PORT) --bind 127.0.0.1 >/tmp/flutter-demo.log 2>&1 &
+	@sleep 2
+	@echo ""
+	@echo "  http://localhost:$(FLUTTER_PORT)"
+	@echo ""
+	@echo "  Use localhost, NOT 127.0.0.1. They are different origins to CORS and only"
+	@echo "  localhost is in the dev allowlist."
+
+flutter-stop: ## Stop the Flutter demo server
+	@pid=$$(ss -ltnpH 2>/dev/null | grep ':$(FLUTTER_PORT) ' | grep -oP 'pid=\K[0-9]+' | head -1); \
+		if [ -n "$$pid" ]; then kill $$pid && echo "  stopped"; else echo "  not running"; fi
