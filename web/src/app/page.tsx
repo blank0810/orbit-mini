@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { PlanCard } from "@/components/pricing/PlanCard";
+import { WalkthroughVideo } from "@/components/pricing/WalkthroughVideo";
 import { Button } from "@/components/ui/Button";
 import { getPlans } from "@/lib/api/payments";
 import type { Plan } from "@/lib/types";
@@ -130,6 +131,8 @@ export default function PricingPage() {
           ))}
         </div>
       ) : null}
+
+      <WalkthroughVideo />
 
       <p className="mt-10 text-sm text-text-3">
         Already subscribed?{" "}

@@ -20,14 +20,13 @@
 | R8 | A Dockerfile | **Done** — two, plus compose |
 | R9 | Looks like it belongs on scalesage.ai | **Done** |
 | R10 | Hosted locally, tunnelled via Cloudflare, on a real domain | **Done** |
-| R11 | A small Flutter component | **NOT BUILT** |
+| R11 | A small Flutter component | **Done** — package, widget gallery, running on a real handset |
 | R12 | FFmpeg processing with a Runpod integration | **NOT BUILT** |
 | D1 | A link to the code | Done |
 | D2 | This report | Done |
-| D3 | A video under five minutes | **NOT DONE** |
+| D3 | A video under five minutes | **Done** — 1m37s, narrated, captioned, embedded on the site |
 
-**Three of fifteen are not delivered.** They are the last three in the list and they are
-the two range items plus the video. Nothing in the pass/fail core is missing.
+**One of fifteen is not delivered: R12.** Nothing in the pass/fail core is missing.
 
 ---
 
@@ -97,12 +96,21 @@ which is what kept the domain model to one table.
 
 Ordered by how much they would matter in production.
 
-**No Flutter component (R11) and no FFmpeg/Runpod pipeline (R12).** Not started. These are
-the two range items and they are simply absent — there is no partial implementation to
-review. The time went into subscription management instead, which was my call to make and
-is the main thing I would do differently.
+**No FFmpeg/Runpod pipeline (R12).** Not started, and simply absent — there is no partial
+implementation to review. It is the one scored item I did not reach.
 
-**No video (D3).** Not recorded.
+**The Flutter component (R11) is a component, not an Android home-screen widget.** Worth
+saying plainly, because "widget" means two different things. `mobile/orbit_status_card/` is
+a Dart package exposing `OrbitStatusCard`, with a gallery that renders all nine states with
+no server running, and an example app that signs in against the live API. It is installed
+and running on a physical Galaxy A35 — that is the phone in the video. A launcher widget
+would have to be Kotlin and RemoteViews, which would demonstrate less Flutter, not more.
+
+**The video's narration is synthetic, and the voice is not the one originally chosen.**
+ElevenLabs, voice *Alice* (British female). The voice first picked is a library voice and
+the API refuses those without a paid plan; Alice was the nearest usable match. The prior
+take was Kokoro-82M generated locally and is kept in `vo/kokoro-backup/`. Details and the
+one-command swap: `brag-output-*/REPLACING-THE-VOICE.md`.
 
 **Registration discloses whether an email has an account.** `POST /api/auth/register`
 answers 409 for an address already in use. Login does *not* leak this — it returns an
