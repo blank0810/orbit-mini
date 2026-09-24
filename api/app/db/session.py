@@ -4,10 +4,13 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import NullPool
 
 from app.core.config import get_settings
 
-engine = create_engine(get_settings().database_url, pool_pre_ping=True)
+# Vercel freezes instances between requests. Close each database connection after use;
+# Neon's pooled endpoint manages the server-side connection count.
+engine = create_engine(get_settings().database_url, poolclass=NullPool)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
 
