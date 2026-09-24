@@ -26,12 +26,12 @@ It is a scored technical deliverable. Two things follow from that:
 | Layer | Technology | Lives in |
 |---|---|---|
 | API and system of record | **FastAPI** (Python 3.11+), SQLAlchemy 2.0 | `api/` |
-| Database | **PostgreSQL 16**, one table | `api/` + compose |
+| Database | **PostgreSQL**, one table: Neon in production, 16 in compose | `api/` + compose |
 | Payments | **Stripe Checkout**, test mode, webhook-driven | `api/` |
 | Client dashboard | **Next.js 16** (App Router), React 19, TypeScript, Tailwind 4 | `web/` |
 | Mobile component | **Flutter** | `mobile/` |
 | Media pipeline | **FFmpeg** + **Runpod** API | `media/` |
-| Delivery | Docker, docker compose, Cloudflare Tunnel | `infra/` |
+| Delivery | **Vercel**, web and API as two projects; docker compose for local development | `docs/VERCEL_DEPLOY.md`, `infra/` |
 
 ### The boundary that matters most
 
@@ -119,7 +119,9 @@ not after their shape (`data`, `obj`, `result`).
 ### 3.5 Every change is deployable
 
 `docker compose up` from a clean checkout plus a `.env` must produce a working system.
-If a step lives only in your shell history, it is not delivered. Write it down in `README.md`.
+If a step lives only in your shell history, it is not delivered. Write it down in `README.md`,
+or in `docs/VERCEL_DEPLOY.md` if it concerns production. Vercel does not run migrations: a
+schema change reaches Neon before the code that needs it reaches `main`.
 
 ---
 
@@ -186,7 +188,7 @@ Rules:
 - Validate and parse every inbound payload with Pydantic. No raw dict access on request bodies.
 - Do not log full Stripe event bodies, emails, or any key material.
 - CORS on the API is an explicit allowlist, never `*`.
-- The public tunnel exposes a real service to the internet. Treat every endpoint as hostile-facing.
+- The API is public at `orbit.ehnand.com`. Treat every endpoint as hostile-facing.
 
 ---
 
@@ -200,12 +202,13 @@ orbit-mini/
 ├── docs/
 │   ├── IMPLEMENTATION_PLAN.md
 │   ├── ARCHITECTURE.md    # the layer contract and the full tree
+│   ├── VERCEL_DEPLOY.md   # production: two Vercel projects, Neon, domains, Stripe
 │   └── design-tokens.md   # scalesage.ai palette, type, the plan we sell
 ├── api/                   # FastAPI, layered: controllers/services/repositories/models
 ├── web/                   # Next.js dashboard
 ├── mobile/                # Flutter component
 ├── media/                 # FFmpeg + Runpod worker
-└── infra/                 # docker-compose, cloudflared config, deploy notes
+└── infra/                 # docker-compose for local dev; retired self-hosted overlay + tunnel
 ```
 
 Keep the root clean. New top-level files need a reason.
@@ -229,8 +232,8 @@ cd web && pnpm lint && pnpm build
 # Stripe webhooks during local dev
 stripe listen --forward-to localhost:7302/api/webhooks/stripe
 
-# Public tunnel
-cloudflared tunnel --config infra/cloudflared/config.yml run
+# Production: push to main and Vercel deploys both projects
+curl -s https://orbit.ehnand.com/api/health/ready
 ```
 
 ---

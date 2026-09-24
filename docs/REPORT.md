@@ -1,7 +1,8 @@
 # Orbit Mini — end-of-day report
 
 **Built:** Monday 21 – Tuesday 22 September 2026
-**Live:** https://orbit.ehnand.com
+**Live:** https://app.orbit.ehnand.com, API at https://orbit.ehnand.com (moved to Vercel on
+23 September, see §8)
 **Code:** https://github.com/blank0810/orbit-mini
 
 ---
@@ -19,7 +20,7 @@
 | R7 | Tests for the sign-up and the payment webhook | **Done** |
 | R8 | A Dockerfile | **Done** — two, plus compose |
 | R9 | Looks like it belongs on scalesage.ai | **Done** |
-| R10 | Hosted locally, tunnelled via Cloudflare, on a real domain | **Done** |
+| R10 | Hosted locally, tunnelled via Cloudflare, on a real domain | **Done**, then retired on 23 September for Vercel — see §8 |
 | R11 | A small Flutter component | **Done** — package, widget gallery, running on a real handset |
 | R12 | FFmpeg processing with a Runpod integration | **NOT BUILT** |
 | D1 | A link to the code | Done |
@@ -192,18 +193,43 @@ leaves our row and Stripe in agreement.
 ## 7. What is running
 
 ```
-orbit-dev    web :7301  api :7302  db :7303  pgadmin :7304
-orbit-prod   web :7311  api :7312  db :7313  pgadmin :7314   + Cloudflare Tunnel
+production   web  app.orbit.ehnand.com   Vercel
+             api  orbit.ehnand.com       Vercel
+             db   Postgres               Neon
+local        web :7301  api :7302  db :7303  pgadmin :7304   docker compose
 ```
 
-Every port binds to `127.0.0.1`. The tunnel dials out and holds the connection open, so no
-inbound port is forwarded on the router. pgAdmin runs but has no ingress rule, which is what
-keeps a database admin UI off the public internet — it is unroutable rather than firewalled.
+Every local port binds to `127.0.0.1`. A push to `main` deploys both Vercel projects. The
+wiring is in [`VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md).
 
-43 tests, 1505 lines of API code, 844 lines of tests, 1310 lines of front-end.
+As of this report on 22 September: 43 tests, 1505 lines of API code, 844 lines of tests,
+1310 lines of front-end.
 
 ```bash
 make            # every command, with descriptions
 make test       # the suite; no network, no Stripe keys
-make deploy     # test, build, migrate, then verify the public url
 ```
+
+---
+
+## 8. After the report: hosting moved to Vercel
+
+On 23 September production moved off the build machine. The web is now on Vercel at
+`app.orbit.ehnand.com`, the API is a second Vercel project at `orbit.ehnand.com`, and
+Postgres is on Neon. The reason is plain: running the stack, the database and the tunnel on
+the machine I work on cost more of its resources than I could spare.
+
+This moves away from R10 as written, which asked for local hosting through a Cloudflare
+Tunnel. That setup was built, served the public domain until 23 September, and is still in the
+repository: `infra/docker-compose.prod.yml`, `infra/cloudflared/config.yml`, and the
+Makefile's `deploy`, `verify` and `prod-*` targets, which drive it and not Vercel. None of it
+changed. It no longer serves the public domain.
+
+Two small code changes came with it. The API accepts Neon's plain `postgresql://` URL, and it
+opens one database connection per request instead of holding a pool, because Vercel freezes
+function instances between requests. Splitting web and API onto two hosts took configuration,
+not code. The session cookie still reaches the API because both hosts share `ehnand.com`,
+which makes the request same-site, and the API's CORS allowlist names the web origin.
+
+One cost: page links from before the move, such as `https://orbit.ehnand.com/login`, now
+reach the API host and return 404. The pages are at the same paths on `app.orbit.ehnand.com`.

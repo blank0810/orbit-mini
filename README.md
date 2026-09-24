@@ -4,8 +4,9 @@ A working slice of a client subscription dashboard. Someone signs up to a monthl
 through Stripe test mode, the system records the payment, and one page shows that person
 their plan, status and renewal date — laid out for a phone first.
 
-**Live:** https://orbit.ehnand.com — served from a machine in a living room in the
-Philippines, published through a Cloudflare Tunnel. No cloud host.
+**Live:** https://app.orbit.ehnand.com, with the API at https://orbit.ehnand.com. Both run
+on Vercel and the database is Postgres on Neon. Until 23 September 2026 it was served from a
+machine in the Philippines through a Cloudflare Tunnel; that setup is still in `infra/`.
 
 FastAPI owns all state, Stripe and truth. Next.js is presentation only and can reach the
 database through nothing but the API.
@@ -15,6 +16,7 @@ database through nothing but the API.
 | **The report** — hours, gaps, and what I would do differently | [`docs/REPORT.md`](docs/REPORT.md) |
 | **The contract** — layers, UX laws, the accessibility floor, definition of done | [`AGENTS.md`](AGENTS.md) |
 | **The architecture** — the full tree for every surface, and why | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| **The deployment** — two Vercel projects, Neon, the domains, Stripe | [`docs/VERCEL_DEPLOY.md`](docs/VERCEL_DEPLOY.md) |
 
 ---
 
@@ -36,28 +38,26 @@ make dev                 # build, start, migrate
 
 `make` on its own lists every target.
 
-| | Development | Production |
-|---|---|---|
-| Web | http://localhost:7301 | 7311, behind the tunnel |
-| API | http://localhost:7302 | 7312 |
-| Postgres | 7303 | 7313 |
-| pgAdmin | 7304 | 7314, **no tunnel route** |
+| | |
+|---|---|
+| Web | http://localhost:7301 |
+| API | http://localhost:7302 |
+| Postgres | 7303 |
+| pgAdmin | 7304 |
 
-Two stacks, two databases, two sets of containers. Working on development cannot disturb
-what the public site serves. Every published port binds to `127.0.0.1`.
+Every published port binds to `127.0.0.1`. Not 3000/8000/5432 — all three were already
+taken on the machine this was built on. Reasoning in
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) section 7.
 
-Not 3000/8000/5432 — all three were already taken on the machine this was built on.
-Reasoning in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) section 7.
-
-pgAdmin has no ingress rule in the tunnel config, which is what keeps a database admin UI
-off the public internet. That is not a firewall decision; it is simply unroutable.
+Local development has its own database, so nothing done here touches production. Production
+is deployed by pushing to `main`; see [`docs/VERCEL_DEPLOY.md`](docs/VERCEL_DEPLOY.md).
 
 ---
 
 ## Tests
 
 ```bash
-make test        # 47 tests, no network, no Stripe keys required
+make test        # 50 tests, no network, no Stripe keys required
 ```
 
 The suite needs a running Postgres, which `make dev` provides. It creates a separate
@@ -94,7 +94,7 @@ api/     FastAPI — controllers, services, repositories, models, schemas
 web/     Next.js — presentation only
 mobile/  Flutter package: the status card, plus a gallery of every state
 media/   FFmpeg → Runpod pipeline (NOT BUILT — see the report)
-infra/   compose for both stacks, and the tunnel config
+infra/   compose for local development, plus the retired self-hosted overlay and tunnel
 ```
 
 The layer list in `AGENTS.md` section 3.3 is closed. A folder outside it is a bug, not a
