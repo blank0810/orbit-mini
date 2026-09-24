@@ -1,7 +1,9 @@
-// Every fetch happens in the browser, never in a server component.
-// Inside Docker, containers reach each other as http://api:8000, which a browser
-// cannot resolve; keeping fetches client-side means one base URL instead of two.
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:7302";
+// Hosted requests stay on the web origin so the API's host-only session cookie works.
+// Docker still supplies the public API address at build time, and local development
+// falls back to the API's published port.
+const BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  (process.env.NODE_ENV === "development" ? "http://localhost:7302" : "");
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
