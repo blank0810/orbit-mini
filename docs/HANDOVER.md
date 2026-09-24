@@ -3,13 +3,15 @@
 **Written:** 2026-09-21
 **Repo state at handover:** scaffolded, zero commits, clean. Nothing of yours to preserve.
 
-> **Historical record, superseded in three places.** Kept as written rather than rewritten.
+> **Historical record, superseded in four places.** Kept as written rather than rewritten.
 > Since this was handed over: ports are **7301 web / 7302 api / 7303 postgres**, because
 > 3000/8000/5432 all collide with other projects on this machine. `AGENTS.md` section 3.3 is
 > now a **layered contract** (controller / service / repository / model / schema), not
 > flat-over-nested. And the brief itself was recovered to `docs/brief.md`, which confirmed
-> the requirement table here is accurate and that Phase 7 is requested by name.
-> Current truth: `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/brief.md`.
+> the requirement table here is accurate and that Phase 7 is requested by name. And the
+> tunnel shipped, then was retired on 23 September 2026: production now runs on Vercel with
+> Postgres on Neon, the web at `app.orbit.ehnand.com` and the API at `orbit.ehnand.com`.
+> Current truth: `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/brief.md`, `docs/VERCEL_DEPLOY.md`.
 
 ---
 

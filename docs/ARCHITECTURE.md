@@ -248,19 +248,25 @@ failure path, and knowing which failures are safe to retry.
 
 ```
 infra/
-├── docker-compose.yml                 db · api · web, healthchecks, named volume
-├── cloudflared/config.yml             ingress rules (credentials are gitignored)
-└── DEPLOY.md                          the tunnel runbook
+├── docker-compose.yml                 db · api · web · pgadmin, healthchecks, named volume
+├── docker-compose.prod.yml            the retired self-hosted production overlay
+├── cloudflared/config.yml             the retired tunnel's ingress rules (credentials gitignored)
+└── pgadmin/servers.json               pre-registers the compose database in pgAdmin
 ```
+
+`infra/` is local development now. Production is not in it: two Vercel projects build `api/`
+and `web/` straight from the repository, with Postgres on Neon. The wiring, and why the
+session cookie survives the web and API sitting on different hosts, is in
+[`VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md). The overlay and tunnel config are what production
+ran on until 23 September 2026.
 
 ### Ports
 
-`7301` web, `7302` api, `7303` postgres, every one bound to `127.0.0.1`.
+`7301` web, `7302` api, `7303` postgres, `7304` pgAdmin, every one bound to `127.0.0.1`.
 
 Not 3000/8000/5432: all three are already claimed by other projects on the build machine, and
-the 7xxx range is clear and far from the ephemeral range. Loopback-only because `cloudflared`
-runs on the host and reaches them over localhost, and `AGENTS.md` section 6 says treat every
-endpoint as hostile-facing once the tunnel is up.
+the 7xxx range is clear and far from the ephemeral range. Loopback-only because a development
+stack has no reason to be reachable from the network the machine sits on.
 
 ---
 

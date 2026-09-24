@@ -49,6 +49,12 @@ the brief is testing for. It would fail R5 while appearing to work.
 
 ### 1.2 Cloudflare Tunnel, not Vercel
 
+> **Superseded 23 September 2026.** The tunnel was built and served `orbit.ehnand.com` as
+> planned below. It was then retired because running the stack locally cost the machine too
+> much. Production is now on Vercel with Postgres on Neon: the web at `app.orbit.ehnand.com`,
+> the API at `orbit.ehnand.com`. See [`VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md) and `REPORT.md`
+> section 8. The reasoning below is kept as it was written.
+
 The brief says: *"Host it locally, tunnel it out via Cloudflare, and deploy it to an
 accessible domain, we want to see the DevOps/Docker/sysadmin side directly, not just hear
 about it."*

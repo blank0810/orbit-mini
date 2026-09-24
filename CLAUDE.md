@@ -27,6 +27,11 @@ pipeline to show infrastructure and integration range.
 
 Full breakdown and sequencing: [`docs/IMPLEMENTATION_PLAN.md`](./docs/IMPLEMENTATION_PLAN.md).
 
+The tunnel was delivered, then retired on 23 September 2026 because the local stack cost the
+machine too much. Production now runs on Vercel with Postgres on Neon: the web at
+`app.orbit.ehnand.com`, the API at `orbit.ehnand.com`. How it is wired:
+[`docs/VERCEL_DEPLOY.md`](./docs/VERCEL_DEPLOY.md).
+
 ---
 
 ## Working agreement
@@ -57,7 +62,7 @@ Use them for review and for parallel independent work, not to fan out the same t
 | `backend-engineer` | FastAPI routes, SQLAlchemy models, Stripe integration, webhook handling |
 | `ui-ux-engineer` | The dashboard and pricing page, mobile layout, the UX laws in `AGENTS.md` section 4 |
 | `qa-engineer` | The pytest suite, edge cases, pre-ship correctness review |
-| `devops-engineer` | Dockerfile, compose, the Cloudflare Tunnel, the public domain |
+| `devops-engineer` | Dockerfile and compose, the Vercel projects, Neon, the public domains |
 | `security-engineer` | Adversarial review of the webhook and any money-touching diff |
 
 Dispatch independent agents in a single message so they run concurrently.
@@ -71,7 +76,7 @@ name into a brief and expect compliance, and never install a skill mid-task: nam
 proceed with what exists, and say what that costs.
 
 Likely relevant here: `superpowers:test-driven-development` for the webhook work,
-`superpowers:systematic-debugging` when Stripe or the tunnel misbehaves, and the UI/UX
+`superpowers:systematic-debugging` when Stripe or a deployment misbehaves, and the UI/UX
 skills for `web/`. Arbitrate, do not assume.
 
 ---
@@ -79,9 +84,12 @@ skills for `web/`. Arbitrate, do not assume.
 ## Guardrails specific to this repo
 
 - **Never run a live Stripe call in a test.** Test mode still means stub at the boundary.
-- **Never print or log a Stripe secret key, webhook signing secret, Runpod key, or tunnel
-  credential**, including inside a debugging session.
-- **Never commit `.env`**, `infra/cloudflared/*.json`, or any tunnel credential file.
+- **Never print or log a Stripe secret key, webhook signing secret, Neon connection string,
+  Runpod key, or tunnel credential**, including inside a debugging session.
+- **Never commit `.env`**, `.env.neon`, `infra/cloudflared/*.json`, or any tunnel credential
+  file.
+- **Nothing local points at production.** Keep the Neon URL in `.env.neon`, never in
+  `api/.env`, where every local `uv run` would pick it up.
 - **Check the port is free before binding.** Ports in play: **7301 web, 7302 api,
   7303 postgres**, all bound to `127.0.0.1`. Not 3000/8000/5432 — every one of those is
   already claimed by another project on this machine. Reasoning in `docs/ARCHITECTURE.md`
@@ -99,8 +107,9 @@ Before saying a piece of this works:
 
 1. Run the command. Read the actual output.
 2. For UI: load it, look at it at 390px wide, tab through it.
-3. For the webhook: fire a real test event through `stripe trigger` or the tunnel and read
-   the database row.
+3. For the webhook: locally, `stripe listen` plus `stripe trigger` and read the row. In
+   production, complete a test checkout on `app.orbit.ehnand.com`, confirm Stripe got a 200
+   from `orbit.ehnand.com/api/webhooks/stripe`, and read the row in Neon.
 
 Evidence before assertions. A claim in the end-of-day report that does not survive the
 reviewer's first question costs more than an honest gap.
