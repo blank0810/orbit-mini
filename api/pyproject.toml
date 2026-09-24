@@ -33,3 +33,6 @@ testpaths = ["tests"]
 pythonpath = ["."]
 # Quiet by default; -v when a failure needs reading.
 addopts = "-q"
+
+[tool.vercel]
+entrypoint = "app.main:app"
